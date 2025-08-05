@@ -1,0 +1,27 @@
+name: Go CI
+
+on: 
+  [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Install this Go version
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.21'
+    
+    - name: Download Go modules
+      run: go mod tidy
+
+    - name: Run tests and vet
+      run: |
+        # do a static analysis of the code recursively from the current directory
+        go vet ./...
+        
+        # recursively find and run tests in all subdirectories of the current directory
+        go test -v ./...
