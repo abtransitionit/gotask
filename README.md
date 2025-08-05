@@ -3,8 +3,8 @@
 
 The core orchestration engine for `abtransitionit`'s tools. This library manages and runs task pipelines using primitives from `gocore` and `golinux` to execute high-level administrative tasks.
 
+[![Go CI](https://github.com/abtransitionit/gotask/actions/workflows/ci.yaml/badge.svg)](https://github.com/abtransitionit/gotask/actions/workflows/ci.yaml)
 [![LICENSE](https://img.shields.io/badge/license-Apache_2.0-blue.svg)](https://choosealicense.com/licenses/apache-2.0/)
-![Go CI](https://github.com/abtransitionit/gotask/actions/workflows/ci.yaml/badge.svg)
 
 ----
 
