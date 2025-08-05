@@ -1,4 +1,4 @@
-# template-repository  
+# Gotask
 
 
 The core orchestration engine for `abtransitionit`'s tools. This library manages and runs task pipelines using primitives from `gocore` and `golinux` to execute high-level administrative tasks.
