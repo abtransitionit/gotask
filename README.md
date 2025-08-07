@@ -1,7 +1,7 @@
 # Gotask
 
 
-The core orchestration engine for `abtransitionit`'s tools. This library manages and runs task pipelines using primitives from `gocore` and `golinux` to execute high-level administrative tasks.
+The core orchestration engine for `abtransitionit`'s tools. This library manages and runs task pipelines using primitives from `gocore` and `golinux` to execute high-level administrative tasks on Linux Platforms.
 
 [![Go CI](https://github.com/abtransitionit/gotask/actions/workflows/ci.yaml/badge.svg)](https://github.com/abtransitionit/gotask/actions/workflows/ci.yaml)
 [![LICENSE](https://img.shields.io/badge/license-Apache_2.0-blue.svg)](https://choosealicense.com/licenses/apache-2.0/)
@@ -68,3 +68,8 @@ go get [github.com/abtransitionit/gotask](https://github.com/abtransitionit/gota
 This structured approach ensures you build from the ground up, with each layer depending only on the layers below it.
 
 Where would you like to start? The most logical first step is to continue building out the `gocore` library.
+
+# The goal of code
+- The goal of code is not to be as short as possible. The goal is to be correct.
+- The goal of code is to be easy for another developer to understand. 
+- The number of lines of code is a poor measure of complexity.

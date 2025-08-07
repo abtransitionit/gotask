@@ -1,0 +1,3 @@
+package dnfapt
+
+// create file from string as sudo user or non-sudo user
