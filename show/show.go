@@ -1,12 +1,12 @@
-package dnfapt
+package show
 
 import (
 	"github.com/abtransitionit/gocore/logx"
 	"github.com/abtransitionit/golinux/executor"
 )
 
-// create file from file as sudo user or non-sudo user
-
+// Name: Show
+// Purpose: create file from file as sudo user or non-sudo user
 func Show(VmList string) {
 
 	// create []string from ListAsString

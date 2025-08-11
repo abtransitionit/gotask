@@ -1,3 +1,5 @@
-package dnfapt
+package file
 
-// create empty file as sudo user or non-sudo user
+// create an empty file
+// Notes:
+// - create an empty file as sudo user or non-sudo user
