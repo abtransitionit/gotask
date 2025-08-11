@@ -1,0 +1,18 @@
+# shared/common piece of code to check tha code and of a Go project
+name: Common/Shared Code Checks modules
+
+on:
+  # so it can be called from other workflows.
+  workflow_call:
+
+jobs:
+  check-code:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Do the checks
+        run: |
+          # do a static analysis of the code recursively from the current directory
+          go vet ./...

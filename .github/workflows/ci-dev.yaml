@@ -1,0 +1,16 @@
+# toknow: by default, multiple jobs inside the same xx.yaml file run concurrently, unless explicitly dependencies is defined.
+# purpose: CI specific to dev branche
+name: CI for dev branch
+
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  install-go:
+    uses: ./.github/workflows/ci_go-install.yaml
+
+  check-code:
+    needs: install-go
+    uses: ./.github/workflows/ci_code-check.yaml

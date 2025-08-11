@@ -1,0 +1,15 @@
+# shared/common piece of code to install a Go toolchain
+name: Install Go toolchain
+
+on:
+  # so it can be called from other workflows.
+  workflow_call:
+
+jobs:
+  install-go-toolchain:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install this Go version
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.24'
