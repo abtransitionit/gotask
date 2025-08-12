@@ -19,12 +19,12 @@ jobs:
 
   check-code:
     needs: checkout-code
-    uses: abtransitionit/cicd-templates/.github/workflows/go-code-check.yaml@main
+    uses: abtransitionit/cicd-templates/.github/workflows/go-check.yaml@main
 
   install-code-dependencies:
     needs: check-code
-    uses: abtransitionit/cicd-templates/.github/workflows/go-code-dep.yaml@main
+    uses: abtransitionit/cicd-templates/.github/workflows/go-dep.yaml@main
 
   test-code:
     needs: install-code-dependencies
-    uses: abtransitionit/cicd-templates/.github/workflows/go-code-test.yaml@main
+    uses: abtransitionit/cicd-templates/.github/workflows/go-test.yaml@main
