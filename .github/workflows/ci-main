@@ -1,0 +1,30 @@
+# toknow: by default, multiple jobs inside the same xx.yaml file run concurrently, unless explicitly dependencies is defined.
+name: CI for main branch
+
+on:
+  # trigger when push on branch
+  push:
+    branches:
+      - main
+
+jobs:
+  install-go:
+     uses: abtransitionit/cicd-templates/.github/workflows/go-install.yaml@main
+     with:
+        go-version: '1.24'
+
+  checkout-code:
+    needs: install-go
+    uses: abtransitionit/cicd-templates/.github/workflows/code-checkout.yaml@main
+
+  check-code:
+    needs: checkout-code
+    uses: abtransitionit/cicd-templates/.github/workflows/go-code-check.yaml@main
+
+  install-code-dependencies:
+    needs: check-code
+    uses: abtransitionit/cicd-templates/.github/workflows/go-code-dep.yaml@main
+
+  test-code:
+    needs: install-code-dependencies
+    uses: abtransitionit/cicd-templates/.github/workflows/go-code-test.yaml@main

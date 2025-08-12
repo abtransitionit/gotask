@@ -1,16 +1,23 @@
 # toknow: by default, multiple jobs inside the same xx.yaml file run concurrently, unless explicitly dependencies is defined.
-# purpose: CI specific to dev branche
 name: CI for dev branch
 
 on:
+  # manual trigger
+  workflow_dispatch: 
+  # trigger when push on branch
   push:
     branches:
       - dev
 
 jobs:
-  install-go:
-    uses: ./.github/workflows/ci_go-install.yaml
+
+  display-info-vm:
+    uses: abtransitionit/cicd-templates/.github/workflows/runner-vm-info.yaml@main
+
+  display-info-container:
+    uses: abtransitionit/cicd-templates/.github/workflows/runner-container-info.yaml@main
 
   check-code:
-    needs: install-go
-    uses: ./.github/workflows/ci_code-check.yaml
+    uses: abtransitionit/cicd-templates/.github/workflows/go-code-check.yaml@main
+    with:
+      go-version: '1.24'
