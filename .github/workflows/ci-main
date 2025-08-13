@@ -9,22 +9,22 @@ on:
 
 jobs:
   install-go:
-     uses: abtransitionit/cicd-templates/.github/workflows/go-install.yaml@main
+     uses: abtransitionit/cicd-go/.github/workflows/go-install.yaml@main
      with:
         go-version: '1.24'
 
   checkout-code:
     needs: install-go
-    uses: abtransitionit/cicd-templates/.github/workflows/code-checkout.yaml@main
+    uses: abtransitionit/cicd-go/.github/workflows/code-checkout.yaml@main
 
   check-code:
     needs: checkout-code
-    uses: abtransitionit/cicd-templates/.github/workflows/go-check.yaml@main
+    uses: abtransitionit/cicd-go/.github/workflows/code-check.yaml@main
 
   install-code-dependencies:
     needs: check-code
-    uses: abtransitionit/cicd-templates/.github/workflows/go-dep.yaml@main
+    uses: abtransitionit/cicd-go/.github/workflows/code-dep.yaml@main
 
   test-code:
     needs: install-code-dependencies
-    uses: abtransitionit/cicd-templates/.github/workflows/go-test.yaml@main
+    uses: abtransitionit/cicd-go/.github/workflows/code-test.yaml@main
