@@ -1,5 +1,5 @@
 # toknow: by default, multiple jobs inside the same xx.yaml file run concurrently, unless explicitly dependencies is defined.
-name: CI for main branch
+name: Main branch CI
 
 on:
   # manual trigger
