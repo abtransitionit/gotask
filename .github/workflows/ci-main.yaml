@@ -1,4 +1,6 @@
-# toknow: by default, multiple jobs inside the same xx.yaml file run concurrently, unless explicitly dependencies is defined.
+# Toknow: by default, multiple jobs inside the same xx.yaml file run concurrently, unless explicitly dependencies is defined.
+# Notes: 
+#  - No build is needed and no artifact is generated because this is a library of code
 name: Main branch CI
 
 on:
@@ -17,12 +19,60 @@ jobs:
   display-info-container:
     uses: abtransitionit/cicd-go/.github/workflows/runner-container-info.yaml@main
 
+  get-go-version:
+    uses: abtransitionit/cicd-go/.github/workflows/go-version.yaml@main
+
+
   check-code:
+    needs: get-go-version
     uses: abtransitionit/cicd-go/.github/workflows/code-check.yaml@main
     with:
-      go-version: '1.24'
+      go-version: ${{ needs.get-go-version.outputs.go-version }}
   
-  test-code:
+  run-test:
+    needs: get-go-version
     uses: abtransitionit/cicd-go/.github/workflows/code-test.yaml@main
     with:
-      go-version: '1.24'
+      go-version: ${{ needs.get-go-version.outputs.go-version }}
+
+  install-dependencies:
+    needs: [get-go-version, run-test]
+    uses: abtransitionit/cicd-go/.github/workflows/code-dep.yaml@main
+    with:
+      go-version: ${{ needs.get-go-version.outputs.go-version }}
+
+
+  create-tag:
+    uses: abtransitionit/cicd-go/.github/workflows/code-tag.yaml@main
+                  
+  # build-code:
+  #   needs: install-dependencies
+  #   uses: abtransitionit/cicd-go/.github/workflows/code-build.yaml@main
+  #   with:
+  #     go-version: '1.24'
+
+
+  # tag-release:
+  #     runs-on: ubuntu-latest
+  #     needs: build-code
+  #     steps:
+  #       - uses: actions/checkout@v4
+  #         with:
+  #           fetch-depth: 0
+  #       - name: Get version from VERSION file
+  #         id: get_version
+  #         run: |
+  #           VERSION=$(cat VERSION)
+  #           echo "version=$VERSION" >> $GITHUB_OUTPUT
+  #       - name: Get latest tag
+  #         id: get_tag
+  #         run: |
+  #           TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+  #           echo "tag=$TAG" >> $GITHUB_OUTPUT
+  #       - name: Create tag if version changed
+  #         if: steps.get_version.outputs.version != steps.get_tag.outputs.tag
+  #         run: |
+  #           git config user.name "github-actions[bot]"
+  #           git config user.email "github-actions[bot]@users.noreply.github.com"
+  #           git tag "${{ steps.get_version.outputs.version }}"
+  #           git push origin "${{ steps.get_version.outputs.version }}"
