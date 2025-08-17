@@ -17,7 +17,5 @@ require (
 // used in dev mode - removes by CI at tag step - simplify development when working on several inter dependant projects
 
 // direct dependency
-replace github.com/abtransitionit/golinux => ../golinux
 
 // indirect dependency
-replace github.com/abtransitionit/gocore => ../gocore
