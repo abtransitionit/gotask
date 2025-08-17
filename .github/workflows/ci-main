@@ -1,4 +1,6 @@
 # toknow: by default, multiple jobs inside the same xx.yaml file run concurrently, unless explicitly dependencies is defined.
+# Notes: 
+#  - No build is needed and no artifact is generated because this is a library of code
 name: Main branch CI
 
 on:
