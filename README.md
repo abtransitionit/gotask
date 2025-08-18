@@ -78,3 +78,12 @@ Where would you like to start? The most logical first step is to continue buildi
 - The goal of code is not to be as short as possible. The goal is to be correct.
 - The goal of code is to be easy for another developer to understand. 
 - The number of lines of code is a poor measure of complexity.
+
+# Open-Source Go Alternatives
+
+* **Task:** This is the most popular choice and a direct replacement for tools like `Make`. You define your tasks in a simple `Taskfile.yml` file, and Task handles the execution. It has built-in support for dependencies, caching, and a clean YAML syntax, which is much easier to read and maintain than a long list of function pointers.
+* **Mage:** Mage takes a different approach. Instead of using a `YAML` file, you write your build scripts in Go itself. This lets you use Go's full power for more complex tasks, but it also means a higher learning curve.
+* **Dagger:** This is a more modern, cloud-native approach. It treats your build logic as a program that can run anywhere—locally, in a container, or on a CI/CD pipeline. It's great for complex, reproducible workflows that involve containers.
+
+For your specific use case, **Task** is a great fit. It would allow you to keep your custom Go code for each **phase** while moving the orchestration logic into a declarative file that's easy to read and manage.
+
