@@ -1,33 +1,35 @@
 package show
 
 import (
-	"github.com/abtransitionit/gocore/logx"
-	"github.com/abtransitionit/golinux/executor"
+	"fmt"
+	"os"
+	"sort"
+
+	"github.com/jedib0t/go-pretty/table"
 )
 
 // Name: Show
 // Purpose: create file from file as sudo user or non-sudo user
-func Show(VmList string) {
+func (w *Workflow) Show() {
+	t := table.NewWriter()
+	t.SetOutputMirror(os.Stdout)
+	t.AppendHeader(table.Row{"Phase", "Description", "Dependencies"})
 
-	// create []string from ListAsString
-	hosts := []string{"o1u", "o2r"} // Provided by the user
-
-	for _, host := range hosts {
-		// Step 1: Check if the VM is configured before trying to connect
-		if configured, err := executor.IsSSHConfigured(host); err != nil {
-			logx.Error("Failed to check SSH config for %s: %s", host, err)
-			continue
-		} else if !configured {
-			logx.Error("VM '%s' is not configured in your SSH config. Skipping.", host)
-			continue
-		}
-
-		// Step 2: Now that we know it's configured, it's safe to run the command
-		output, err := executor.RunSSH(host, "systemctl status sshd")
-		if err != nil {
-			logx.Error("Error running command on %s: %s", host, err)
-			continue
-		}
-		logx.Info("Output from %s: %s", host, output)
+	// deterministically order phases
+	names := make([]string, 0, len(w.Phases))
+	for name := range w.Phases {
+		names = append(names, name)
 	}
+	sort.Strings(names)
+
+	for _, name := range names {
+		phase := w.Phases[name]
+		deps := "none"
+		if len(phase.Dependencies) > 0 {
+			deps = fmt.Sprintf("%v", phase.Dependencies)
+		}
+		t.AppendRow(table.Row{phase.Name, phase.Description, deps})
+	}
+
+	t.Render()
 }
