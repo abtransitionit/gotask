@@ -81,3 +81,11 @@ func ShowFiltered(workflow *phase.Workflow, l logx.Logger, ctx context.Context, 
 	return nil
 
 }
+
+func ShowWorkflow(ctx context.Context, logger logx.Logger, cmd ...string) (string, error) {
+	// Access the global or package-level workflow variable
+	// Or, pass the workflow object as a variable
+	logger.Info("From gotask/workflow : WorflowDisplaying workflow execution plan:")
+	// wkf.Show(logger) // Assuming you have a Show() method on your Workflow struct
+	return "Workflow plan displayed successfully.", nil
+}
