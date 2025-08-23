@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 
+	gocorectx "github.com/abtransitionit/gocore/ctx"
 	"github.com/abtransitionit/gocore/logx"
 	"github.com/abtransitionit/gocore/phase"
 )
@@ -83,9 +84,20 @@ func ShowFiltered(workflow *phase.Workflow, l logx.Logger, ctx context.Context, 
 }
 
 func ShowWorkflow(ctx context.Context, logger logx.Logger, cmd ...string) (string, error) {
-	// Access the global or package-level workflow variable
-	// Or, pass the workflow object as a variable
-	logger.Info("From gotask/workflow : WorflowDisplaying workflow execution plan:")
+	// Define a custom key type to avoid collisions.
+	type contextKey string
+	const mxExecutionKey contextKey = "executionID"
+
+	logger.Info("From gotask/workflow : Displaying workflow execution plan:")
+	// Get the var that was pass to the ctx and convert it to string
+	// execID, ok := ctx.Value(gocorectx.ExecutionIDKey).(string)
+	theWrkfl, ok := ctx.Value(gocorectx.WorkflowKey).(*phase.Workflow)
+	if !ok || theWrkfl == nil {
+		return "", fmt.Errorf("failed to get executionID from context")
+	}
+	// logger.Infof("From gotask/workflow : wrkfl: %v", theWrkfl)
+	theWrkfl.Show(logger)
 	// wkf.Show(logger) // Assuming you have a Show() method on your Workflow struct
+	// return execID, nil
 	return "Workflow plan displayed successfully.", nil
 }
