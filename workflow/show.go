@@ -59,6 +59,7 @@ func ShowPhase(workflow *phase.Workflow, l logx.Logger) error {
 	workflow.Show(l)
 	return nil
 }
+
 func ShowFiltered(workflow *phase.Workflow, l logx.Logger, ctx context.Context, skipPhases []int) error {
 
 	// check parameters
