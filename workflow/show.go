@@ -48,6 +48,19 @@ func ShowTier(workflow *phase.Workflow, l logx.Logger) (string, error) {
 
 	return "ShowTier phase complete", nil
 }
+
+// Name: ShowPhase
+//
+// Description: displays the workflow's phases
+//
+// Parameters:
+//
+//   - logger: The logger to use for printing messages.
+//   - workflow: The workflow to be executed.
+//
+// Returns:
+//
+//   - An error if any
 func ShowPhase(workflow *phase.Workflow, l logx.Logger) error {
 
 	// check parameters
@@ -58,30 +71,6 @@ func ShowPhase(workflow *phase.Workflow, l logx.Logger) error {
 	// show all workflow phases
 	workflow.Show(l)
 	return nil
-}
-
-func ShowFiltered(workflow *phase.Workflow, l logx.Logger, ctx context.Context, skipPhases []int) error {
-
-	// check parameters
-	if workflow == nil {
-		return fmt.Errorf("workflow cannot be nil")
-	}
-
-	// get phases topoSorted
-	PhaseSortedByTier, err := workflow.TopoSort(ctx)
-	if err != nil {
-		l.ErrorWithStack(err, "failed to sort phases")
-		return err
-	}
-	// filter them
-	l.Info("filtered the tiers")
-	PhaseFilteredByTier := PhaseSortedByTier.Filter(*workflow, l, skipPhases)
-
-	// show them
-	l.Info("list of filtered phases")
-	PhaseFilteredByTier.Show(l)
-	return nil
-
 }
 
 func ShowWorkflow(ctx context.Context, logger logx.Logger, cmd ...string) (string, error) {
