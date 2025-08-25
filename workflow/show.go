@@ -5,7 +5,7 @@ import (
 	"context"
 	"fmt"
 
-	gocorectx "github.com/abtransitionit/gocore/ctx"
+	corectx "github.com/abtransitionit/gocore/ctx"
 	"github.com/abtransitionit/gocore/logx"
 	"github.com/abtransitionit/gocore/phase"
 )
@@ -73,21 +73,35 @@ func ShowPhase(workflow *phase.Workflow, l logx.Logger) error {
 	return nil
 }
 
+// Name: ShowWorkflow
+//
+// Description: displays the workflow's phases and execution plan.
+//
+// Parameters:
+//
+//   - ctx: The context for the phase.
+//   - logger: The logger to use for printing messages.
+//   - ...string: The command to be executed.
+//
+// Returns:
+//
+//   - An error if any
+//
+// Notes:
+//   - intented for test
+//   - the ctx must have received the worflow
 func ShowWorkflow(ctx context.Context, logger logx.Logger, cmd ...string) (string, error) {
 	// Define a custom key type to avoid collisions.
 	type contextKey string
 	const mxExecutionKey contextKey = "executionID"
 
 	logger.Info("From gotask/workflow : Displaying workflow execution plan:")
-	// Get the var that was pass to the ctx and convert it to string
-	// execID, ok := ctx.Value(gocorectx.ExecutionIDKey).(string)
-	theWrkfl, ok := ctx.Value(gocorectx.WorkflowKey).(*phase.Workflow)
-	if !ok || theWrkfl == nil {
-		return "", fmt.Errorf("failed to get executionID from context")
+	// Get the var that was pass to the ctx and convert it
+	wrkflw, ok := ctx.Value(corectx.WorkflowKeyId).(*phase.Workflow)
+	if !ok || wrkflw == nil {
+		return "", fmt.Errorf("From gotask/workflow : failed to get executionID from context")
 	}
-	// logger.Infof("From gotask/workflow : wrkfl: %v", theWrkfl)
-	theWrkfl.Show(logger)
-	// wkf.Show(logger) // Assuming you have a Show() method on your Workflow struct
-	// return execID, nil
-	return "Workflow plan displayed successfully.", nil
+	// logger.Infof("From gotask/workflow : wrkfl: %v", wrkflw)
+	wrkflw.Show(logger)
+	return "", nil
 }
