@@ -8,14 +8,14 @@ import (
 // Name: InstallPackage
 // Description: Install a Dnfapt package
 func InstallPackage(packageName string) {
-	logx.Info("[%s] Installalling package", packageName)
+	logx.Infof("[%s] Installalling package", packageName)
 
 	if err := dnfapt.Install(packageName); err != nil {
-		logx.Error("Installation failed: %s", err)
+		logx.Errorf("Installation failed: %s", err)
 		return
 	}
 
-	logx.Info("[%s] successfully installed package", packageName)
+	logx.Infof("[%s] successfully installed package", packageName)
 }
 
 // // Inside a function in your gotask library

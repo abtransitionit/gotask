@@ -8,14 +8,14 @@ import (
 // Name: CreateRepo
 // Description: Create a Dnfapt repository
 func CreateRepo(repoName string) {
-	logx.Info("[%s] Installalling package", repoName)
+	logx.Infof("[%s] Installalling package", repoName)
 
 	if err := dnfapt.Install(repoName); err != nil {
-		logx.Error("creation of repo failed: %s", err)
+		logx.Errorf("creation of repo failed: %s", err)
 		return
 	}
 
-	logx.Info("[%s] successfully created dnfapt repository", repoName)
+	logx.Infof("[%s] successfully created dnfapt repository", repoName)
 }
 
 // // Inside a function in your gotask library

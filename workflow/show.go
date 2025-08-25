@@ -90,18 +90,14 @@ func ShowPhase(workflow *phase.Workflow, l logx.Logger) error {
 // Notes:
 //   - intented for test
 //   - the ctx must have received the worflow
-func ShowWorkflow(ctx context.Context, logger logx.Logger, cmd ...string) (string, error) {
-	// Define a custom key type to avoid collisions.
-	type contextKey string
-	const mxExecutionKey contextKey = "executionID"
+func ShowWorkflow(ctx context.Context, logger logx.Logger, targets []phase.Target, cmd ...string) (string, error) {
 
 	logger.Info("From gotask/workflow : Displaying workflow execution plan:")
 	// Get the var that was pass to the ctx and convert it
 	wrkflw, ok := ctx.Value(corectx.WorkflowKeyId).(*phase.Workflow)
 	if !ok || wrkflw == nil {
-		return "", fmt.Errorf("From gotask/workflow : failed to get executionID from context")
+		return "", fmt.Errorf("from gotask/workflow : failed to get executionID from context")
 	}
-	// logger.Infof("From gotask/workflow : wrkfl: %v", wrkflw)
 	wrkflw.Show(logger)
 	return "", nil
 }
