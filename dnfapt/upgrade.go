@@ -8,8 +8,9 @@ import (
 
 	"github.com/abtransitionit/gocore/logx"
 	"github.com/abtransitionit/gocore/phase"
+	"github.com/abtransitionit/gocore/run"
 	"github.com/abtransitionit/gocore/syncx"
-	"github.com/abtransitionit/golinux/executor"
+	linuxrun "github.com/abtransitionit/golinux/run"
 )
 
 // Name: upgradeSingleVm
@@ -46,7 +47,7 @@ func upgradeSingleVmOs(vmName string, osFamily string) error {
 	// Join commands with && to run them sequentially
 	cli := strings.Join(cmds, " && ")
 
-	return executor.RunOnVm(vmName, cli)
+	return run.RunOnVm(vmName, cli)
 }
 
 // func upgradeSingleVmOs(vm *phase.Vm) error {
@@ -93,7 +94,7 @@ func createSliceFunc(l logx.Logger, targets []phase.Target) []syncx.Func {
 		vmCopy := vm // capture for closure
 		tasks = append(tasks, func() error {
 			// Detect OS dynamically via executor helper
-			osFamily, err := executor.GetVmOsFamily(vmCopy.Name())
+			osFamily, err := linuxrun.GetVmOsFamily(vmCopy.Name())
 			if err != nil {
 				l.Errorf("🅣 Failed to detect OS family for VM %s: %v", vmCopy.Name(), err)
 				return err

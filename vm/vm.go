@@ -8,8 +8,8 @@ import (
 	"github.com/abtransitionit/gocore/errorx"
 	"github.com/abtransitionit/gocore/logx"
 	"github.com/abtransitionit/gocore/phase"
+	"github.com/abtransitionit/gocore/run"
 	"github.com/abtransitionit/gocore/syncx"
-	"github.com/abtransitionit/golinux/executor"
 )
 
 // Name: checkSingleVmIsSshReachable
@@ -23,7 +23,7 @@ import (
 // Notes:
 // - pure logic : no logging
 func checkSingleVmIsSshReachable(vm *phase.Vm) error {
-	reachable, err := executor.IsVmSshReachable(vm.Name())
+	reachable, err := run.IsVmSshReachable(vm.Name())
 	if err != nil {
 		return errorx.NewWithNoStack("🅣 SSH check failed for VM %s", vm.Name())
 	}
