@@ -5,12 +5,11 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/abtransitionit/gocore/cli"
 	"github.com/abtransitionit/gocore/errorx"
 	"github.com/abtransitionit/gocore/logx"
 	"github.com/abtransitionit/gocore/phase"
-	"github.com/abtransitionit/gocore/run"
 	"github.com/abtransitionit/gocore/syncx"
+	"github.com/abtransitionit/golinux/cli"
 )
 
 // Name: checkSingleVmIsSshReachable
@@ -27,30 +26,19 @@ import (
 //
 // Notes:
 // - pure logic : no logging
-func DeployLucOnVm(logger logx.Logger, vm *phase.Vm) error {
+func DeployLucOnSingleVm(logger logx.Logger, vm *phase.Vm) error {
 	// define vars
 	localArtifactPath := "/tmp/goluc-linux"
-	dstPath := "/usr/local/bin/luc"
+	dstPath := "/usr/local/bin/goluc"
 	hostFilePath := fmt.Sprintf("%s:%s", vm.Name(), dstPath)
 
 	// deploy the artifact : ie. scp fie to remote
-	deployOk, err := cli.DeployGoArtifact(logger, localArtifactPath, hostFilePath)
+	deployOk, err := cli.DeployGoArtifactAsSudo(logger, localArtifactPath, hostFilePath)
 	if err != nil {
-		logger.Errorf("%v", err)
-		return err
+		return errorx.NewWithNoStack("🅣 %s: %v ", err, vm.Name())
 	}
-
 	if !deployOk {
-		logger.Error("Deployment failed")
-		return fmt.Errorf("deployment failed")
-	}
-
-	reachable, err := run.IsVmSshReachable(vm.Name())
-	if err != nil {
-		return errorx.NewWithNoStack("🅣 SSH check failed for VM %s", vm.Name())
-	}
-	if !reachable {
-		return errorx.NewWithNoStack("🅣 VM %s is not reachable via SSH", vm.Name())
+		return errorx.NewWithNoStack("🅣 %s: %v ", err, vm.Name())
 	}
 	return nil
 }
@@ -91,11 +79,10 @@ func createSliceFunc(logger logx.Logger, targets []phase.Target) []syncx.Func {
 		vmCopy := vm // capture for closure
 		// define and add each task to the slice
 		tasks = append(tasks, func() error {
-			if err := DeployLucOnVm(logger, vmCopy); err != nil {
+			if err := DeployLucOnSingleVm(logger, vmCopy); err != nil {
 				logger.Errorf("%s", err)
 				return err
 			}
-			// logger.Debugf("VM %s passed SSH check", vmCopy.Name()) // log success
 			return nil
 		})
 	}

@@ -47,7 +47,14 @@ func upgradeSingleVmOs(vmName string, osFamily string) error {
 	// Join commands with && to run them sequentially
 	cli := strings.Join(cmds, " && ")
 
-	return run.RunOnVm(vmName, cli)
+	// play the CLI
+	_, err := run.RunOnVm(vmName, cli)
+	if err != nil {
+		// fmt.Printf("Command output from %s:\n%s\n", vmName, output)
+		return fmt.Errorf("failed to upgrade OS on VM %s: %w", vmName, err)
+	}
+	// fmt.Printf("Successfully upgraded OS on %s. Output:\n%s\n", vmName, output)
+	return nil
 }
 
 // func upgradeSingleVmOs(vm *phase.Vm) error {
