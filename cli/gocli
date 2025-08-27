@@ -14,9 +14,8 @@ import (
 // The `cmd` arguments are expected to be:
 // 1. projectPath (string)
 // 2. outputDir (string)
-func BuildProject(ctx context.Context, l logx.Logger, targets []Target, cmd ...string) (string, error) {
+func BuildProject(ctx context.Context, logger logx.Logger, targets []Target, cmd ...string) (string, error) {
 	// The logger is now passed in explicitly.
-	logger := l
 
 	if len(cmd) < 2 {
 		return "", fmt.Errorf("BuildProject requires at least two arguments: projectPath and outputDir")

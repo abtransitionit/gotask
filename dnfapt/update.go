@@ -13,9 +13,9 @@ import (
 	"github.com/abtransitionit/golinux/property"
 )
 
-// Name: upgradeSingleVmOs
+// Name: upgradeSingleVm
 //
-// Description: the single task: upgrade an OS
+// Description: the single task: update the OS with standard/required/missing dnfapt packages
 //
 // Parameters:
 //
@@ -27,7 +27,7 @@ import (
 //
 // Notes:
 // - pure logic : no logging
-func upgradeSingleVmOs(vmName string) error {
+func updateSingleVmOsApp(vmName string) error {
 	var cmds []string
 
 	// get property
@@ -59,12 +59,25 @@ func upgradeSingleVmOs(vmName string) error {
 	// play the CLI
 	_, err = run.RunOnVm(vmName, cli)
 	if err != nil {
+		// fmt.Printf("Command output from %s:\n%s\n", vmName, output)
 		return fmt.Errorf("failed to upgrade OS on VM %s: %w", vmName, err)
 	}
+	// fmt.Printf("Successfully upgraded OS on %s. Output:\n%s\n", vmName, output)
 	return nil
 }
 
-// Name: createSliceFunc
+// func upgradeSingleVmOs(vm *phase.Vm) error {
+// 	reachable, err := executor.IsVmSshReachable(vm.Name())
+// 	if err != nil {
+// 		return errorx.NewWithNoStack("🅣 SSH check failed for VM %s", vm.Name())
+// 	}
+// 	if !reachable {
+// 		return errorx.NewWithNoStack("🅣 VM %s is not reachable via SSH", vm.Name())
+// 	}
+// 	return nil
+// }
+
+// NAme: createSliceFunc
 //
 // Description: create the slice of tasks
 //
@@ -80,7 +93,7 @@ func upgradeSingleVmOs(vmName string) error {
 //
 // - as many tasks as there are VMs
 // - Only VM targets are included; others are skipped with a warning.
-func createSliceFuncForUpgrade(l logx.Logger, targets []phase.Target) []syncx.Func {
+func createSliceFuncForUpdate(l logx.Logger, targets []phase.Target) []syncx.Func {
 	var tasks []syncx.Func
 
 	for _, t := range targets {
@@ -115,25 +128,27 @@ func createSliceFuncForUpgrade(l logx.Logger, targets []phase.Target) []syncx.Fu
 //
 // Notes:
 // - Each target must implement the Target interface.
-func UpgradeVmOs(ctx context.Context, logger logx.Logger, targets []phase.Target, cmd ...string) (string, error) {
+func UpdateVmOsApp(listRequiredPackage []string) phase.PhaseFunc {
+	return func(ctx context.Context, logger logx.Logger, targets []phase.Target, cmd ...string) (string, error) {
 
-	logger.Info("🅣 Starting phase: UpgradeVmOs")
-	// check paramaters
-	if len(targets) == 0 {
-		logger.Warn("🅣 No targets provided to : UpgradeVmOs")
-		return "", nil
+		logger.Info("🅣 Starting phase: UpgradeVmOs")
+		// check paramaters
+		if len(targets) == 0 {
+			logger.Warn("🅣 No targets provided to : UpgradeVmOs")
+			return "", nil
+		}
+
+		// Build slice of functions
+		tasks := createSliceFuncForUpgrade(logger, targets)
+
+		// Log number of tasks
+		logger.Infof("🅣 Phase UpgradeVmOs has %d concurent tasks", len(tasks))
+
+		// Run tasks in the slice concurrently
+		if errs := syncx.RunConcurrently(ctx, tasks); errs != nil {
+			return "", errs[0] // return first error encountered
+		}
+
+		return fmt.Sprintf("🅣 Terminated phase UpgradeVmOs on %d VM(s)", len(tasks)), nil
 	}
-
-	// Build slice of functions
-	tasks := createSliceFuncForUpgrade(logger, targets)
-
-	// Log number of tasks
-	logger.Infof("🅣 Phase UpgradeVmOs has %d concurent tasks", len(tasks))
-
-	// Run tasks in the slice concurrently
-	if errs := syncx.RunConcurrently(ctx, tasks); errs != nil {
-		return "", errs[0] // return first error encountered
-	}
-
-	return fmt.Sprintf("🅣 Terminated phase UpgradeVmOs on %d VM(s)", len(tasks)), nil
 }
