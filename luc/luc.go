@@ -1,10 +1,11 @@
 // File gotask/phase/show.go
-package vm
+package luc
 
 import (
 	"context"
 	"fmt"
 
+	"github.com/abtransitionit/gocore/cli"
 	"github.com/abtransitionit/gocore/errorx"
 	"github.com/abtransitionit/gocore/logx"
 	"github.com/abtransitionit/gocore/phase"
@@ -14,15 +15,36 @@ import (
 
 // Name: checkSingleVmIsSshReachable
 //
-// Description: the single task: checks if a single VM is SSH reachable
+// Description: the single task: deploys LUC on a single VM
 //
 // Returns:
 // - nil if the VM is reachable,
 // - an error if the VM is not configured, not reachable or if there was an SSH failure.
 //
+// Prerequisites:
+//
+// - VM must be reachable via SSH
+//
 // Notes:
 // - pure logic : no logging
-func checkSingleVmIsSshReachable(vm *phase.Vm) error {
+func DeployLucOnVm(logger logx.Logger, vm *phase.Vm) error {
+	// define vars
+	localArtifactPath := "/tmp/goluc-linux"
+	dstPath := "/usr/local/bin/luc"
+	hostFilePath := fmt.Sprintf("%s:%s", vm.Name(), dstPath)
+
+	// deploy the artifact : ie. scp fie to remote
+	deployOk, err := cli.DeployGoArtifact(logger, localArtifactPath, hostFilePath)
+	if err != nil {
+		logger.Errorf("%v", err)
+		return err
+	}
+
+	if !deployOk {
+		logger.Error("Deployment failed")
+		return fmt.Errorf("deployment failed")
+	}
+
 	reachable, err := run.IsVmSshReachable(vm.Name())
 	if err != nil {
 		return errorx.NewWithNoStack("🅣 SSH check failed for VM %s", vm.Name())
@@ -38,7 +60,7 @@ func checkSingleVmIsSshReachable(vm *phase.Vm) error {
 // Description: create the slice of tasks
 //
 // Parameters:
-// - l: logger
+// - logger: logger
 // - targets: list of targets
 //
 // Returns:
@@ -69,7 +91,7 @@ func createSliceFunc(logger logx.Logger, targets []phase.Target) []syncx.Func {
 		vmCopy := vm // capture for closure
 		// define and add each task to the slice
 		tasks = append(tasks, func() error {
-			if err := checkSingleVmIsSshReachable(vmCopy); err != nil {
+			if err := DeployLucOnVm(logger, vmCopy); err != nil {
 				logger.Errorf("%s", err)
 				return err
 			}
@@ -81,13 +103,14 @@ func createSliceFunc(logger logx.Logger, targets []phase.Target) []syncx.Func {
 	return tasks
 }
 
-// name: checkVmSshAccess
+// name: DeployLuc
 //
 // description: the overall task.
 //
 // Notes:
 // - Each target must implement the Target interface.
-func CheckVmSshAccess(ctx context.Context, logger logx.Logger, targets []phase.Target, cmd ...string) (string, error) {
+func DeployLuc(ctx context.Context, logger logx.Logger, targets []phase.Target, cmd ...string) (string, error) {
+
 	// check paramaters
 	if len(targets) == 0 {
 		logger.Warn("🅣 No targets provided to checkVmSshAccess")
