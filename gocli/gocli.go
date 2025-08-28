@@ -69,19 +69,15 @@ func InstallOnSingleVm(logger logx.Logger, vmName string, listGoClis []gocli.GoC
 			return "", err
 		}
 
-		// for exe file : mv file to /usr/local/bin
-		// for tgz file : still some work
-		// for zip file : say it is not yet managed
-
 		// move file when possible
 		switch fileType {
 		case "zip":
 			logger.Debugf("🌐 Cli: % not yet managed", goCli.Name)
 		case "tgz":
-			logger.Debugf("🌐 Cli: %s:type:tgz:%s - manage tgz file", goCli.Name, localPath)
+			logger.Debugf("🌐 Cli: %s:type:tgz:%s - need more works", goCli.Name, localPath)
 		case "exe":
-			// get the value of OsName for a goCli that end up with an Exe type
-			logger.Debugf("🌐 Cli: %s:type:Exe:%s - mv to /usr/local/bin/%s", goCli.Name, localPath, goCli.OsName)
+			logger.Debugf("🌐 Cli: %s:type:Exe:%s - will mv to folder /usr/local/bin", goCli.Name, localPath)
+			// lookup OsName for a goCli that end up with an Exe type
 
 		default:
 			return "", fmt.Errorf("Unsupported file type %s", fileType)
