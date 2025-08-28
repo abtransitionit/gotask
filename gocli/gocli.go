@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/abtransitionit/gocore/filex"
 	"github.com/abtransitionit/gocore/gocli"
 	"github.com/abtransitionit/gocore/logx"
 	"github.com/abtransitionit/gocore/phase"
@@ -43,10 +44,10 @@ func InstallOnSingleVm(logger logx.Logger, vmName string, listGoClis []gocli.GoC
 		return "", fmt.Errorf("%v", err)
 	}
 
-	// loop over cli
+	// loop over each cli
 	for _, goCli := range listGoClis {
 
-		// get the vm's specific URL of the CLI to install
+		// get the URL of the CLI to install that is also VM specific
 		logger.Debugf("%s: will install following GO CLI(s): %s", vmName, listGoClis)
 		url, err := gocli.ResolveURL(logger, goCli, osType, osArch, uname)
 		if err != nil {
@@ -60,6 +61,15 @@ func InstallOnSingleVm(logger logx.Logger, vmName string, listGoClis []gocli.GoC
 			return "", err
 		}
 		logger.Infof("Cli: %s UrlLocalPath: %s", goCli.Name, localPath)
+
+		// detect the type of the downloaded file
+		fileType, err := filex.Detect(localPath)
+		if err != nil {
+			fmt.Println("Detection failed:", err)
+			return "", err
+		}
+
+		logger.Infof("Cli: %s UrlfileType: %s", goCli.Name, fileType)
 
 	}
 
