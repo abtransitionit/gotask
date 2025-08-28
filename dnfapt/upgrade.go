@@ -4,12 +4,12 @@ package dnfapt
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/abtransitionit/gocore/logx"
 	"github.com/abtransitionit/gocore/phase"
 	"github.com/abtransitionit/gocore/run"
 	"github.com/abtransitionit/gocore/syncx"
+	"github.com/abtransitionit/golinux/dnfapt"
 	"github.com/abtransitionit/golinux/property"
 )
 
@@ -27,41 +27,26 @@ import (
 //
 // Notes:
 // - pure logic : no logging
-func upgradeSingleVmOs(vmName string) error {
-	var cmds []string
+func upgradeSingleVmOs(vmName string) (string, error) {
 
 	// get property
 	osFamily, err := property.GetProperty(vmName, "osfamily")
 	if err != nil {
-		return fmt.Errorf("%v", err)
+		return "", fmt.Errorf("%v", err)
 	}
 
-	switch osFamily {
-	case "debian":
-		cmds = []string{
-			"DEBIAN_FRONTEND=noninteractive sudo apt-get -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' update -qq -y",
-			"DEBIAN_FRONTEND=noninteractive sudo apt-get -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' upgrade -qq -y",
-			"DEBIAN_FRONTEND=noninteractive sudo apt-get -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' clean -qq",
-		}
-	case "rhel", "fedora":
-		cmds = []string{
-			"sudo dnf update -q -y",
-			"sudo dnf upgrade -q -y",
-			"sudo dnf clean all",
-		}
-	default:
-		return fmt.Errorf("unsupported Linux OS Family: %s", osFamily)
+	// get the cli
+	cli, err := dnfapt.UpgradeOs(osFamily)
+	if err != nil {
+		return "", err
 	}
-
-	// Join commands with && to run them sequentially
-	cli := strings.Join(cmds, " && ")
-
 	// play the CLI
 	_, err = run.RunOnVm(vmName, cli)
 	if err != nil {
-		return fmt.Errorf("failed to upgrade OS on VM %s: %w", vmName, err)
+		return "", fmt.Errorf("failed to upgrade OS on VM %s: %w", vmName, err)
 	}
-	return nil
+
+	return "", nil
 }
 
 // Name: createSliceFunc
@@ -96,7 +81,7 @@ func createSliceFuncForUpgrade(l logx.Logger, targets []phase.Target) []syncx.Fu
 
 		vmCopy := vm // capture for closure
 		tasks = append(tasks, func() error {
-			if err := upgradeSingleVmOs(vmCopy.Name()); err != nil {
+			if _, err := upgradeSingleVmOs(vmCopy.Name()); err != nil {
 				l.Errorf("🅣 Failed to upgrade VM %s: %v", vmCopy.Name(), err)
 				return err
 			}

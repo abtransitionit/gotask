@@ -7,6 +7,7 @@ import (
 
 	"github.com/abtransitionit/gocore/logx"
 	"github.com/abtransitionit/gocore/phase"
+	"github.com/abtransitionit/gocore/run"
 	"github.com/abtransitionit/gocore/syncx"
 	"github.com/abtransitionit/golinux/dnfapt"
 	"github.com/abtransitionit/golinux/property"
@@ -37,8 +38,10 @@ func updateSingleVmOsApp(logger logx.Logger, vmName string, requiredPackages []s
 	logger.Debugf("will install required or missing packages: %v\n", requiredPackages)
 	logger.Debugf("%s:%s\n", vmName, osFamily)
 
+	// loop over each package
 	for _, pkgName := range requiredPackages {
 		install := false
+
 		// logic for installtion
 		switch pkgName {
 		case "uidmap":
@@ -49,15 +52,23 @@ func updateSingleVmOsApp(logger logx.Logger, vmName string, requiredPackages []s
 			install = true
 		}
 
-		// logic for log
-		if install {
-			err := dnfapt.InstallPackage(logger, osFamily, pkgName)
-			if err != nil {
-				return "", err
-			}
-			// run installation here
-		} else {
+		// if nothing to install
+		if !install {
 			logger.Debugf("Skipping package installation for %s:%s:%s", vmName, osFamily, pkgName)
+			continue
+		}
+
+		// here: something to install
+		logger.Debugf("Attempting to install dnfapt package: %s on %s", pkgName, osFamily)
+		// get the cli
+		cli, err := dnfapt.InstallPackage(osFamily, pkgName)
+		if err != nil {
+			return "", err
+		}
+		// play the CLI
+		_, err = run.RunOnVm(vmName, cli)
+		if err != nil {
+			return "", fmt.Errorf("failed to install package %s OS on VM %s: %w", pkgName, vmName, err)
 		}
 	}
 	return "", nil
