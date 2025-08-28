@@ -100,7 +100,7 @@ func createSliceFuncForUpdate(logger logx.Logger, targets []phase.Target, requir
 				return err
 			}
 
-			logger.Infof("🅣 VM %s package installed successfully", vmCopy.Name())
+			// logger.Infof("🅣 VM %s package installed successfully", vmCopy.Name())
 			return nil
 		})
 	}
