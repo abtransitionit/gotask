@@ -28,7 +28,7 @@ import (
 // - pure logic : no logging
 func InstallOnSingleVm(logger logx.Logger, vmName string, listGoClis []gocli.GoCli) (string, error) {
 
-	// get property
+	// get vm property
 	osType, err := property.GetProperty(vmName, "ostype")
 	if err != nil {
 		return "", fmt.Errorf("%v", err)
@@ -42,19 +42,32 @@ func InstallOnSingleVm(logger logx.Logger, vmName string, listGoClis []gocli.GoC
 		return "", fmt.Errorf("%v", err)
 	}
 
-	logger.Debugf("%s: will install following GO CLI(s): %s", vmName, listGoClis)
-
 	// loop over cli
 	for _, goCli := range listGoClis {
-		logger.Debugf("%s: installing GO cli: %s ", vmName, goCli.Name)
-		_, err := gocli.Install(logger, goCli, osType, osArch, uname)
+
+		// get the vm's specific URL of the CLI to install
+		logger.Debugf("%s: will install following GO CLI(s): %s", vmName, listGoClis)
+		url, err := gocli.ResolveURL(logger, goCli, osType, osArch, uname)
 		if err != nil {
-			logger.Debugf("%s: error installing GO cli: %s ", vmName, goCli.Name)
 			return "", err
 		}
-		logger.Debugf("%s: successfully installed GO cli: %s ", vmName, goCli.Name)
+		logger.Infof("Cli: %s Url: %s", goCli.Name, url)
 	}
+
+	// logger.Infof("Cli: %s Url: %s", cli.Name, url)
 	return "", nil
+
+	// // loop over cli
+	// for _, goCli := range listGoClis {
+	// 	logger.Debugf("%s: installing GO cli: %s ", vmName, goCli.Name)
+	// 	_, err := gocli.Install(logger, goCli, osType, osArch, uname)
+	// 	if err != nil {
+	// 		logger.Debugf("%s: error installing GO cli: %s ", vmName, goCli.Name)
+	// 		return "", err
+	// 	}
+	// 	logger.Debugf("%s: successfully installed GO cli: %s ", vmName, goCli.Name)
+	// }
+	// return "", nil
 }
 
 // Name: createSliceFuncForInstall
