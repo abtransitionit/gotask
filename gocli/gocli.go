@@ -3,11 +3,13 @@ package gocli
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/abtransitionit/gocore/gocli"
 	"github.com/abtransitionit/gocore/logx"
 	"github.com/abtransitionit/gocore/phase"
 	"github.com/abtransitionit/gocore/syncx"
+	"github.com/abtransitionit/golinux/property"
 )
 
 // Name: Install
@@ -26,14 +28,29 @@ import (
 // - pure logic : no logging
 func InstallOnSingleVm(logger logx.Logger, vmName string, listGoClis []gocli.GoCli) (string, error) {
 
+	// get property
+	osType, err := property.GetProperty(vmName, "ostype")
+	if err != nil {
+		return "", fmt.Errorf("%v", err)
+	}
+	osArch, err := property.GetProperty(vmName, "osarch")
+	if err != nil {
+		return "", fmt.Errorf("%v", err)
+	}
+	uname, err := property.GetProperty(vmName, "uname")
+	if err != nil {
+		return "", fmt.Errorf("%v", err)
+	}
+
 	logger.Debugf("%s: will install following GO CLI(s): %s", vmName, listGoClis)
 
 	// loop over cli
 	for _, goCli := range listGoClis {
 		logger.Debugf("%s: installing GO cli: %s ", vmName, goCli.Name)
-		_, err := gocli.Install(goCli)
+		_, err := gocli.Install(logger, goCli, osType, osArch, uname)
 		if err != nil {
 			logger.Debugf("%s: error installing GO cli: %s ", vmName, goCli.Name)
+			return "", err
 		}
 		logger.Debugf("%s: successfully installed GO cli: %s ", vmName, goCli.Name)
 	}
