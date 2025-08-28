@@ -10,7 +10,7 @@ import (
 	"github.com/abtransitionit/gocore/logx"
 	"github.com/abtransitionit/gocore/phase"
 	"github.com/abtransitionit/gocore/syncx"
-	coreurl "github.com/abtransitionit/gocore/url"
+	"github.com/abtransitionit/gocore/url"
 	"github.com/abtransitionit/golinux/property"
 )
 
@@ -44,18 +44,20 @@ func InstallOnSingleVm(logger logx.Logger, vmName string, listGoClis []gocli.GoC
 		return "", fmt.Errorf("%v", err)
 	}
 
+	// log
+	logger.Debugf("%s: will install following GO CLI(s): %s", vmName, listGoClis)
+
 	// loop over each cli
 	for _, goCli := range listGoClis {
 
 		// get the URL of the CLI to install that is also VM specific
-		logger.Debugf("%s: will install following GO CLI(s): %s", vmName, listGoClis)
-		url, err := gocli.ResolveURL(logger, goCli, osType, osArch, uname)
+		urlResolved, err := gocli.ResolveURL(logger, goCli, osType, osArch, uname)
 		if err != nil {
 			return "", err
 		}
 
 		// download file pointed by URL - on local host
-		localPath, err := coreurl.Download(goCli.Name, url)
+		localPath, err := url.Download(goCli.Name, urlResolved)
 		if err != nil {
 			return "", err
 		}
@@ -67,8 +69,23 @@ func InstallOnSingleVm(logger logx.Logger, vmName string, listGoClis []gocli.GoC
 			return "", err
 		}
 
-		logger.Infof("🌐 Cli: %s UrlfileType: %s", goCli.Name, fileType)
+		// for exe file : mv file to /usr/local/bin
+		// for tgz file : still some work
+		// for zip file : say it is not yet managed
 
+		// move file when possible
+		switch fileType {
+		case "zip":
+			logger.Debugf("🌐 Cli: % not yet managed", goCli.Name)
+		case "tgz":
+			logger.Debugf("🌐 Cli: %s:type:tgz:%s - manage tgz file", goCli.Name, localPath)
+		case "exe":
+			// get the value of OsName for a goCli that end up with an Exe type
+			logger.Debugf("🌐 Cli: %s:type:Exe:%s - mv to /usr/local/bin/%s", goCli.Name, localPath, goCli.OsName)
+
+		default:
+			return "", fmt.Errorf("Unsupported file type %s", fileType)
+		}
 	}
 
 	// logger.Infof("Cli: %s Url: %s", cli.Name, url)
