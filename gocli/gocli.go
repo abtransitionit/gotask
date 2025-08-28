@@ -9,6 +9,7 @@ import (
 	"github.com/abtransitionit/gocore/logx"
 	"github.com/abtransitionit/gocore/phase"
 	"github.com/abtransitionit/gocore/syncx"
+	coreurl "github.com/abtransitionit/gocore/url"
 	"github.com/abtransitionit/golinux/property"
 )
 
@@ -52,6 +53,14 @@ func InstallOnSingleVm(logger logx.Logger, vmName string, listGoClis []gocli.GoC
 			return "", err
 		}
 		logger.Infof("Cli: %s Url: %s", goCli.Name, url)
+
+		// download file pointed by URL - on local host
+		localPath, err := coreurl.Download(goCli.Name, url)
+		if err != nil {
+			return "", err
+		}
+		logger.Infof("Cli: %s UrlLocalPath: %s", goCli.Name, localPath)
+
 	}
 
 	// logger.Infof("Cli: %s Url: %s", cli.Name, url)
