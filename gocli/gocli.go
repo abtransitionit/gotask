@@ -76,7 +76,7 @@ func InstallOnSingleVm(logger logx.Logger, vmName string, listGoClis []gocli.GoC
 		case "tgz":
 			logger.Debugf("🌐 Cli: %s:type:tgz:%s - need more works", goCli.Name, localPath)
 		case "exe":
-			logger.Debugf("🌐 Cli: %s:type:Exe:%s - will mv to folder /usr/local/bin", goCli.Name, localPath)
+			logger.Debugf("🌐 Cli: %s:type:Exe:%s : now sudo copy %s to folder /usr/local/bin with name xxx", goCli.Name, localPath)
 			// lookup OsName for a goCli that end up with an Exe type
 
 		default:
