@@ -75,29 +75,23 @@ func InstallOnSingleVm(logger logx.Logger, vmName string, listGoClis []gocli.GoC
 			logger.Debugf("🌐 Cli: % not yet managed", goCli.Name)
 		case "tgz":
 			logger.Debugf("🌐 Cli: %s:type:tgz:%s - need more works", goCli.Name, localPath)
+			_, err := gocli.ManageTgz(localPath)
+			if err != nil {
+				return "", err
+			}
 		case "exe":
 			logger.Debugf("🌐 Cli: %s:type:Exe:%s : now sudo copy %s to folder /usr/local/bin with name xxx", goCli.Name, localPath, localPath)
-			// lookup OsName for a goCli that end up with an Exe type
-
+			_, err := gocli.ManageExe(localPath)
+			if err != nil {
+				return "", err
+			}
 		default:
 			return "", fmt.Errorf("Unsupported file type %s", fileType)
 		}
 	}
 
-	// logger.Infof("Cli: %s Url: %s", cli.Name, url)
 	return "", nil
 
-	// // loop over cli
-	// for _, goCli := range listGoClis {
-	// 	logger.Debugf("%s: installing GO cli: %s ", vmName, goCli.Name)
-	// 	_, err := gocli.Install(logger, goCli, osType, osArch, uname)
-	// 	if err != nil {
-	// 		logger.Debugf("%s: error installing GO cli: %s ", vmName, goCli.Name)
-	// 		return "", err
-	// 	}
-	// 	logger.Debugf("%s: successfully installed GO cli: %s ", vmName, goCli.Name)
-	// }
-	// return "", nil
 }
 
 // Name: createSliceFuncForInstall
