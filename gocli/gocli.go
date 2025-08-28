@@ -53,17 +53,15 @@ func InstallOnSingleVm(logger logx.Logger, vmName string, listGoClis []gocli.GoC
 		if err != nil {
 			return "", err
 		}
-		// logger.Infof("Cli: %s Url: %s", goCli.Name, url)
 
 		// download file pointed by URL - on local host
 		localPath, err := coreurl.Download(goCli.Name, url)
 		if err != nil {
 			return "", err
 		}
-		// logger.Infof("Cli: %s UrlLocalPath: %s", goCli.Name, localPath)
 
 		// detect the type of the downloaded file
-		fileType, err := filex.Detect(localPath)
+		fileType, err := filex.DetectBinaryType(localPath) // eg. tar.gz, zip, binary
 		if err != nil {
 			fmt.Println("Detection failed:", err)
 			return "", err
