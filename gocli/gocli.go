@@ -72,7 +72,8 @@ func InstallOnSingleVm(logger logx.Logger, vmName string, listGoClis []gocli.GoC
 		// move file when possible
 		switch fileType {
 		case "zip":
-			logger.Debugf("🌐 Cli: % not yet managed", goCli.Name)
+			logger.Debugf("🌐 filetype: %s not yet managed", fileType)
+			return "", fmt.Errorf("Not yet managed file type %s", fileType)
 		case "tgz":
 			logger.Debugf("🌐 Cli: %s:type:tgz:%s - need more works", goCli.Name, localPath)
 			_, err := gocli.ManageTgz(localPath)
