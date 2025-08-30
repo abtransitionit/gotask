@@ -60,6 +60,7 @@ func updateSingleVmOsApp(logger logx.Logger, vmName string, requiredPackages []s
 
 		// here: something to install
 		logger.Debugf("Attempting to install dnfapt package: %s on %s", pkgName, osFamily)
+
 		// get the cli
 		cli, err := dnfapt.InstallPackage(osFamily, pkgName)
 		if err != nil {

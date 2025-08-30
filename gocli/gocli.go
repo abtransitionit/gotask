@@ -10,6 +10,7 @@ import (
 	"github.com/abtransitionit/gocore/phase"
 	"github.com/abtransitionit/gocore/run"
 	"github.com/abtransitionit/gocore/syncx"
+	"github.com/abtransitionit/golinux/filex"
 	"github.com/abtransitionit/golinux/property"
 )
 
@@ -75,11 +76,22 @@ func InstallSingleGoCliOnSingleVm(ctx context.Context, logger logx.Logger, vmNam
 			return "", err
 		}
 	case "exe":
-		logger.Debugf("🌐 Cli: %s:type:Exe:%s : now sudo copy %s to folder /usr/local/bin with name xxx", goCli.Name, filePath, filePath)
-		_, err := gocli.ManageExe(filePath)
+		logger.Debugf("🌐 1 Cli: %s:type:Exe:%s : sudo copying %s to folder /usr/local/bin with name %s", goCli.Name, filePath, filePath, goCli.Name)
+
+		// get cli
+		cli, err := filex.CpAsSudo(ctx, logger, filePath, "/usr/local/bin/"+goCli.Name)
 		if err != nil {
-			return "", err
+			return "", fmt.Errorf("failed to get code from library : %w", err)
 		}
+
+		// play it on remote
+		_, err = run.RunCliSsh(vmName, cli)
+		if err != nil {
+			return "", fmt.Errorf("failed to play cli %s on vm '%s': %w", cli, vmName, err)
+		}
+
+		//success
+		logger.Debugf("🌐 2 copied cli to dst")
 	default:
 		return "", fmt.Errorf("Unsupported file type %s", fileType)
 	}
