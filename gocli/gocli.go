@@ -43,6 +43,8 @@ func InstallSingleGoCliOnSingleVm(ctx context.Context, logger logx.Logger, vmNam
 		return "", fmt.Errorf("%v", err)
 	}
 
+	// logger.Infof("🌐 osType: %s osArch: %s uname: %s", osType, osArch, uname)
+
 	// get the URL of the CLI to install that is also VM specific
 	urlResolved, err := gocli.ResolveURL(logger, goCli, osType, osArch, uname)
 	if err != nil {
@@ -68,7 +70,7 @@ func InstallSingleGoCliOnSingleVm(ctx context.Context, logger logx.Logger, vmNam
 	switch fileType {
 	case "zip":
 		logger.Debugf("🌐 filetype: %s not yet managed", fileType)
-		return "", fmt.Errorf("Not yet managed file type %s", fileType)
+		return "", fmt.Errorf("not yet managed file type %s", fileType)
 	case "tgz":
 		logger.Debugf("🌐 Cli: %s:type:tgz:%s - need more works", goCli.Name, filePath)
 		_, err := gocli.ManageTgz(filePath)
@@ -93,7 +95,7 @@ func InstallSingleGoCliOnSingleVm(ctx context.Context, logger logx.Logger, vmNam
 		//success
 		logger.Debugf("🌐 2 copied cli to dst")
 	default:
-		return "", fmt.Errorf("Unsupported file type %s", fileType)
+		return "", fmt.Errorf("unsupported file type %s", fileType)
 	}
 
 	return "", nil
