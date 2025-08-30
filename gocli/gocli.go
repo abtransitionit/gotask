@@ -5,16 +5,15 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/abtransitionit/gocore/filex"
 	"github.com/abtransitionit/gocore/gocli"
 	"github.com/abtransitionit/gocore/logx"
 	"github.com/abtransitionit/gocore/phase"
+	"github.com/abtransitionit/gocore/run"
 	"github.com/abtransitionit/gocore/syncx"
-	"github.com/abtransitionit/gocore/url"
 	"github.com/abtransitionit/golinux/property"
 )
 
-// Name: Install
+// Name: InstallSingleGoCliOnSingleVm
 //
 // Description: the single task: update the OS with standard/required/missing dnfapt packages
 //
@@ -28,8 +27,7 @@ import (
 //
 // Notes:
 // - pure logic : no logging
-func InstallOnSingleVm(logger logx.Logger, vmName string, listGoClis []gocli.GoCli) (string, error) {
-
+func InstallSingleGoCliOnSingleVm(ctx context.Context, logger logx.Logger, vmName string, goCli gocli.GoCli) (string, error) {
 	// get vm property
 	osType, err := property.GetProperty(vmName, "ostype")
 	if err != nil {
@@ -44,55 +42,79 @@ func InstallOnSingleVm(logger logx.Logger, vmName string, listGoClis []gocli.GoC
 		return "", fmt.Errorf("%v", err)
 	}
 
+	// get the URL of the CLI to install that is also VM specific
+	urlResolved, err := gocli.ResolveURL(logger, goCli, osType, osArch, uname)
+	if err != nil {
+		return "", err
+	}
+
+	// download file pointed by URL
+	cmd := fmt.Sprintf("goluc do download %s -p %s", urlResolved, goCli.Name)
+	filePath, err := run.RunCliSsh(vmName, cmd)
+	if err != nil {
+		return "", fmt.Errorf("failed to play cli on vm: '%s': '%s' : %w", vmName, cmd, err)
+	}
+	logger.Debugf("🌐 filePath:%s", filePath)
+
+	// detect the type of the downloaded file
+	cmd = fmt.Sprintf("goluc do detect %s ", filePath)
+	fileType, err := run.RunCliSsh(vmName, cmd)
+	if err != nil {
+		return "", fmt.Errorf("failed to play cli on vm: '%s': '%s' : %w", vmName, cmd, err)
+	}
+
+	// move file when possible
+	switch fileType {
+	case "zip":
+		logger.Debugf("🌐 filetype: %s not yet managed", fileType)
+		return "", fmt.Errorf("Not yet managed file type %s", fileType)
+	case "tgz":
+		logger.Debugf("🌐 Cli: %s:type:tgz:%s - need more works", goCli.Name, filePath)
+		_, err := gocli.ManageTgz(filePath)
+		if err != nil {
+			return "", err
+		}
+	case "exe":
+		logger.Debugf("🌐 Cli: %s:type:Exe:%s : now sudo copy %s to folder /usr/local/bin with name xxx", goCli.Name, filePath, filePath)
+		_, err := gocli.ManageExe(filePath)
+		if err != nil {
+			return "", err
+		}
+	default:
+		return "", fmt.Errorf("Unsupported file type %s", fileType)
+	}
+
+	return "", nil
+}
+
+// Name: InstallLisGoCliOnSingleVm
+//
+// Description: the single task: update the OS with standard/required/missing dnfapt packages
+//
+// Parameters:
+//
+// - vmName: name of the VM
+//
+// Returns:
+// - nil if the VM is reachable,
+// - an error if the VM is not configured, not reachable or if there was an SSH failure.
+//
+// Notes:
+// - pure logic : no logging
+func InstallLisGoCliOnSingleVm(ctx context.Context, logger logx.Logger, vmName string, listGoClis []gocli.GoCli) (string, error) {
 	// log
 	logger.Debugf("%s: will install following GO CLI(s): %s", vmName, listGoClis)
 
 	// loop over each cli
 	for _, goCli := range listGoClis {
 
-		// get the URL of the CLI to install that is also VM specific
-		urlResolved, err := gocli.ResolveURL(logger, goCli, osType, osArch, uname)
+		// install the cli
+		_, err := InstallSingleGoCliOnSingleVm(ctx, logger, vmName, goCli)
 		if err != nil {
 			return "", err
-		}
-
-		// download file pointed by URL - on local host
-		localPath, err := url.Download(goCli.Name, urlResolved)
-		if err != nil {
-			return "", err
-		}
-
-		// detect the type of the downloaded file
-		fileType, err := filex.DetectBinaryType(localPath) // eg. tar.gz, zip, binary
-		if err != nil {
-			fmt.Println("Detection failed:", err)
-			return "", err
-		}
-
-		// move file when possible
-		switch fileType {
-		case "zip":
-			logger.Debugf("🌐 filetype: %s not yet managed", fileType)
-			return "", fmt.Errorf("Not yet managed file type %s", fileType)
-		case "tgz":
-			logger.Debugf("🌐 Cli: %s:type:tgz:%s - need more works", goCli.Name, localPath)
-			_, err := gocli.ManageTgz(localPath)
-			if err != nil {
-				return "", err
-			}
-		case "exe":
-			logger.Debugf("🌐 Cli: %s:type:Exe:%s : now sudo copy %s to folder /usr/local/bin with name xxx", goCli.Name, localPath, localPath)
-			_, err := gocli.ManageExe(localPath)
-			if err != nil {
-				return "", err
-			}
-		default:
-			return "", fmt.Errorf("Unsupported file type %s", fileType)
 		}
 	}
-
 	return "", nil
-
 }
 
 // Name: createSliceFuncForInstall
@@ -111,7 +133,7 @@ func InstallOnSingleVm(logger logx.Logger, vmName string, listGoClis []gocli.GoC
 //
 // - as many tasks as there are VMs
 // - Only VM targets are included; others are skipped with a warning.
-func createSliceFuncForInstall(logger logx.Logger, targets []phase.Target, listGoClis []gocli.GoCli) []syncx.Func {
+func createSliceFuncForInstall(ctx context.Context, logger logx.Logger, targets []phase.Target, listGoClis []gocli.GoCli) []syncx.Func {
 	var tasks []syncx.Func
 
 	for _, t := range targets {
@@ -128,7 +150,7 @@ func createSliceFuncForInstall(logger logx.Logger, targets []phase.Target, listG
 		vmCopy := vm // capture for closure
 		// define the job of the task and add it to the slice
 		tasks = append(tasks, func() error {
-			if _, err := InstallOnSingleVm(logger, vmCopy.Name(), listGoClis); err != nil {
+			if _, err := InstallLisGoCliOnSingleVm(ctx, logger, vmCopy.Name(), listGoClis); err != nil {
 				logger.Errorf("🅣 Failed to execute task on VM %s: %v", vmCopy.Name(), err)
 				return err
 			}
@@ -157,7 +179,7 @@ func InstallOnVm(listGoClis []gocli.GoCli) phase.PhaseFunc {
 		}
 
 		// Build slice of functions
-		tasks := createSliceFuncForInstall(logger, targets, listGoClis)
+		tasks := createSliceFuncForInstall(ctx, logger, targets, listGoClis)
 
 		// Log number of tasks
 		logger.Infof("🅣 Phase %s has %d concurent tasks", appx, len(tasks))
@@ -167,7 +189,6 @@ func InstallOnVm(listGoClis []gocli.GoCli) phase.PhaseFunc {
 			return "", errs[0] // return first error encountered
 		}
 
-		// return fmt.Sprintf("🅣 Terminated phase InstallOnVm on %d VM(s)", len(tasks)), nil
 		return "", nil
 	}
 }
