@@ -4,6 +4,8 @@ package gocli
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/abtransitionit/gocore/gocli"
 	"github.com/abtransitionit/gocore/logx"
@@ -43,8 +45,6 @@ func InstallSingleGoCliOnSingleVm(ctx context.Context, logger logx.Logger, vmNam
 		return "", fmt.Errorf("%v", err)
 	}
 
-	// logger.Infof("🌐 osType: %s osArch: %s uname: %s", osType, osArch, uname)
-
 	// get the URL of the CLI to install that is also VM specific
 	urlResolved, err := gocli.ResolveURL(logger, goCli, osType, osArch, uname)
 	if err != nil {
@@ -57,7 +57,6 @@ func InstallSingleGoCliOnSingleVm(ctx context.Context, logger logx.Logger, vmNam
 	if err != nil {
 		return "", fmt.Errorf("failed to play cli on vm: '%s': '%s' : %w", vmName, cmd, err)
 	}
-	logger.Debugf("🌐 filePath:%s", filePath)
 
 	// detect the type of the downloaded file
 	cmd = fmt.Sprintf("goluc do detect %s ", filePath)
@@ -69,16 +68,67 @@ func InstallSingleGoCliOnSingleVm(ctx context.Context, logger logx.Logger, vmNam
 	// move file when possible
 	switch fileType {
 	case "zip":
-		logger.Debugf("🌐 filetype: %s not yet managed", fileType)
-		return "", fmt.Errorf("not yet managed file type %s", fileType)
+		logger.Debugf("🌐 ZIp:%s not yet managed", filePath)
+		return "", fmt.Errorf("filetype: Zip not yet managed")
+
 	case "tgz":
-		logger.Debugf("🌐 Cli: %s:type:tgz:%s - need more works", goCli.Name, filePath)
-		_, err := gocli.ManageTgz(filePath)
+		// get cli
+		cli := filex.DetectTgzFile(filePath)
 		if err != nil {
-			return "", err
+			return "", fmt.Errorf("failed to get code from library : %w", err)
 		}
+
+		// play it on remote
+		nbFileStr, err := run.RunCliSsh(vmName, cli)
+		if err != nil {
+			return "", fmt.Errorf("failed to play cli %s on vm '%s': %w", cli, vmName, err)
+		}
+		// get cli
+		cli = filex.DetectTgzFolder(filePath)
+		if err != nil {
+			return "", fmt.Errorf("failed to get code from library : %w", err)
+		}
+
+		// play it on remote
+		nbFolderStr, err := run.RunCliSsh(vmName, cli)
+		if err != nil {
+			return "", fmt.Errorf("failed to play cli %s on vm '%s': %w", cli, vmName, err)
+		}
+		nbFileInt, _ := strconv.Atoi(strings.TrimSpace(nbFileStr))
+		nbFolderInt, _ := strconv.Atoi(strings.TrimSpace(nbFolderStr))
+
+		if nbFolderInt == 0 && nbFileInt > 1 {
+			// get cli
+			cli = filex.CpTgzFileLevel0(filePath, goCli.Name)
+			if err != nil {
+				return "", fmt.Errorf("failed to get code from library : %w", err)
+			}
+
+			// play it on remote
+			_, err := run.RunCliSsh(vmName, cli)
+			if err != nil {
+				return "", fmt.Errorf("failed to play cli %s on vm '%s': %w", cli, vmName, err)
+			}
+			logger.Debugf("🌐🅣 Tgz:%s has %s file(s) and %s folder(s), so tar -C /usr/local/bin/%s ", goCli.Name, nbFileStr, nbFolderStr, goCli.Name)
+		} else if nbFolderInt == 1 && nbFileInt > 1 {
+			// get cli
+			cli = filex.CpTgzFileLevel0(filePath, goCli.Name)
+			if err != nil {
+				return "", fmt.Errorf("failed to get code from library : %w", err)
+			}
+
+			// play it on remote
+			_, err := run.RunCliSsh(vmName, cli)
+			if err != nil {
+				return "", fmt.Errorf("failed to play cli %s on vm '%s': %w", cli, vmName, err)
+			}
+			logger.Debugf("🌐🅣 Tgz:%s has %s file(s) and %s folder(s), so tar -C /usr/local/bin/%s --strip-components=1 ", goCli.Name, nbFileStr, nbFolderStr, goCli.Name)
+		} else {
+			logger.Info("not yet managed")
+		}
+
+		// logger.Debugf("🌐🅣 Tgz:%s has %s file(s) and %s folder(s), so ", goCli.Name, nbFile, nbFolder)
 	case "exe":
-		logger.Debugf("🌐 1 Cli: %s:type:Exe:%s : sudo copying %s to folder /usr/local/bin with name %s", goCli.Name, filePath, filePath, goCli.Name)
 
 		// get cli
 		cli, err := filex.CpAsSudo(ctx, logger, filePath, "/usr/local/bin/"+goCli.Name)
@@ -93,7 +143,7 @@ func InstallSingleGoCliOnSingleVm(ctx context.Context, logger logx.Logger, vmNam
 		}
 
 		//success
-		logger.Debugf("🌐 2 copied cli to dst")
+		logger.Debugf("🌐🅔 Exe:%s:%s copied to /usr/local/bin/%s", goCli.Name, filePath, filePath)
 	default:
 		return "", fmt.Errorf("unsupported file type %s", fileType)
 	}
