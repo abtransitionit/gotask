@@ -1,5 +1,0 @@
-package file
-
-// create file
-// Notes:
-// - create file as sudo user or non-sudo user
