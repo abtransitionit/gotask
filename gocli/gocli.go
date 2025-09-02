@@ -77,7 +77,6 @@ func InstallSingleGoCliOnSingleVm(ctx context.Context, logger logx.Logger, vmNam
 		}
 
 		// play it on remote
-		logger.Debugf("🌐🌐 CLI is: %s", cli)
 		_, err := run.RunCliSsh(vmName, cli)
 		if err != nil {
 			return "", fmt.Errorf("failed to play cli %s on vm '%s': %w", cli, vmName, err)
