@@ -6,6 +6,7 @@ import (
 
 	"github.com/abtransitionit/gocore/logx"
 	"github.com/abtransitionit/gocore/phase"
+	"github.com/abtransitionit/gocore/run"
 	"github.com/abtransitionit/gocore/syncx"
 	"github.com/abtransitionit/golinux/oservice"
 )
@@ -19,18 +20,24 @@ func StartSingleOsServiceOnSingleVm(ctx context.Context, logger logx.Logger, vmN
 	}
 
 	// logic for services
-	start := false
-	// start = true si le service existe
+	start := true
 
 	// if nothing to start
 	if !start {
 		logger.Debugf("Skipping starting service for %s:%s:%s", vmName, osServiceCName)
 		return "", nil
+	}
 
+	// start the service
+	logger.Debugf("%s: starting service %s", vmName, osServiceCName)
+	cli := oservice.StartService(osService)
+	_, err = run.RunCliSsh(vmName, cli)
+	if err != nil {
+		return "", fmt.Errorf("failed to play cli %s on vm '%s': %w", cli, vmName, err)
 	}
 
 	// success
-	logger.Debugf("%s: will start %s", vmName, osServiceCName)
+	logger.Debugf("%s: started service %s", vmName, osServiceCName)
 	return "", nil
 }
 
