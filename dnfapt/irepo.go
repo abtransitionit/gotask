@@ -41,13 +41,18 @@ func installSingleDaRepoOnSingleVm(ctx context.Context, logger logx.Logger, vmNa
 
 	logger.Debugf("%s:%s:%s Installing dnfapt package repository: %s", vmName, osFamily, osDistro, daRepo.Name)
 
+	// install the dnfapt package repository
+	_, err = dnfapt.InstallDaRepository(ctx, logger, osFamily, daRepo)
+	if err != nil {
+		return "", err
+	}
 	// success
 	logger.Debugf("%s:%s:%s Installed dnfapt package repository: %s", vmName, osFamily, osDistro, daRepo.Name)
 	return "", nil
 }
 func installListDaRepoOnSingleVm(ctx context.Context, logger logx.Logger, vmName string, listDaRepo dnfapt.SliceDaRepository) (string, error) {
 	// log
-	logger.Debugf("%s: will install following dnfapt package repository: %s", vmName, listDaRepo)
+	logger.Debugf("%s: will install following dnfapt package repositories: %s", vmName, listDaRepo.GetListName())
 
 	// loop over each cli
 	for _, daRepoName := range listDaRepo {
