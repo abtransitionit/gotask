@@ -85,7 +85,8 @@ func InstallSingleGoCliOnSingleVm(ctx context.Context, logger logx.Logger, vmNam
 	case "exe":
 
 		// get cli
-		cli, err := filex.CpAsSudo(ctx, logger, filePath, "/usr/local/bin/"+goCli.Name)
+		dstFile := "/usr/local/bin/" + goCli.Name
+		cli, err := filex.CpAsSudo(ctx, logger, filePath, dstFile)
 		if err != nil {
 			return "", fmt.Errorf("failed to get code from library : %w", err)
 		}
@@ -97,7 +98,7 @@ func InstallSingleGoCliOnSingleVm(ctx context.Context, logger logx.Logger, vmNam
 		}
 
 		//success
-		logger.Debugf("🌐🅔 Exe:%s:%s copied to /usr/local/bin/%s", goCli.Name, filePath, filePath)
+		logger.Debugf("🌐🅔 Exe:%s:%s copied to ", goCli.Name, filePath, dstFile)
 	default:
 		return "", fmt.Errorf("unsupported file type %s", fileType)
 	}

@@ -7,7 +7,6 @@ import (
 
 	"github.com/abtransitionit/gocore/logx"
 	"github.com/abtransitionit/gocore/phase"
-	"github.com/abtransitionit/gocore/run"
 	"github.com/abtransitionit/gocore/syncx"
 	"github.com/abtransitionit/golinux/dnfapt"
 	"github.com/abtransitionit/golinux/property"
@@ -27,8 +26,8 @@ import (
 //
 // Notes:
 // - pure logic : no logging
-func updateSingleVmOsApp(logger logx.Logger, vmName string, requiredPackages []string) (string, error) {
-
+func installSingleDaRepoOnSingleVm(ctx context.Context, logger logx.Logger, vmName string, daRepo dnfapt.DaRepository) (string, error) {
+	logger.Debugf("will install dnfapt package repository: %v\n", daRepo.Name)
 	// get property
 	osFamily, err := property.GetProperty(vmName, "osfamily")
 	if err != nil {
@@ -40,52 +39,29 @@ func updateSingleVmOsApp(logger logx.Logger, vmName string, requiredPackages []s
 		return "", fmt.Errorf("%v", err)
 	}
 
-	// logger.Debugf("will install required or missing packages: %v\n", requiredPackages)
+	logger.Debugf("%s:%s:%s Installing dnfapt package repository: %s", vmName, osFamily, osDistro, daRepo.Name)
 
-	// loop over each package
-	for _, pkgName := range requiredPackages {
-		install := false
+	// success
+	logger.Debugf("%s:%s:%s Installed dnfapt package repository: %s", vmName, osFamily, osDistro, daRepo.Name)
+	return "", nil
+}
+func installListDaRepoOnSingleVm(ctx context.Context, logger logx.Logger, vmName string, listDaRepo dnfapt.SliceDaRepository) (string, error) {
+	// log
+	logger.Debugf("%s: will install following dnfapt package repository: %s", vmName, listDaRepo)
 
-		// logic for installtion
-		switch pkgName {
-		case "uidmap":
-			if osFamily == "debian" {
-				install = true
-			}
-		case "dbus-user-session":
-			if osDistro == "debian" {
-				install = true
-			}
-			// case "gnupg":
-			// 	if osDistro == "debian" {
-			// 		install = true
-			// 	}
-		}
+	// loop over each cli
+	for _, daRepoName := range listDaRepo {
 
-		// if nothing to install
-		if !install {
-			// logger.Debugf("%s:%s:%s Skipping dnfapt package installation of : %s", vmName, osFamily, osDistro, pkgName)
-			continue
-		}
-
-		// here: something to install
-		logger.Debugf("%s:%s:%s Installing dnfapt package : %s", vmName, osFamily, osDistro, pkgName)
-
-		// get the cli
-		cli, err := dnfapt.InstallPackage(osFamily, pkgName)
+		// install the dnfapt package repository
+		_, err := installSingleDaRepoOnSingleVm(ctx, logger, vmName, daRepoName)
 		if err != nil {
 			return "", err
-		}
-		// play the CLI
-		_, err = run.RunOnVm(vmName, cli)
-		if err != nil {
-			return "", fmt.Errorf("failed to install package %s OS on VM %s: %w", pkgName, vmName, err)
 		}
 	}
 	return "", nil
 }
 
-// NAme: createSliceFunc
+// Name: createSliceFunc
 //
 // Description: create the slice of tasks
 //
@@ -101,7 +77,7 @@ func updateSingleVmOsApp(logger logx.Logger, vmName string, requiredPackages []s
 //
 // - as many tasks as there are VMs
 // - Only VM targets are included; others are skipped with a warning.
-func createSliceFuncForUpdate(logger logx.Logger, targets []phase.Target, requiredPackages []string) []syncx.Func {
+func createSliceFuncForInstallRepo(ctx context.Context, logger logx.Logger, targets []phase.Target, listDaRepo dnfapt.SliceDaRepository) []syncx.Func {
 	var tasks []syncx.Func
 
 	for _, t := range targets {
@@ -117,7 +93,7 @@ func createSliceFuncForUpdate(logger logx.Logger, targets []phase.Target, requir
 
 		vmCopy := vm // capture for closure
 		tasks = append(tasks, func() error {
-			if _, err := updateSingleVmOsApp(logger, vmCopy.Name(), requiredPackages); err != nil {
+			if _, err := installListDaRepoOnSingleVm(ctx, logger, vmCopy.Name(), listDaRepo); err != nil {
 				logger.Errorf("🅣 Failed to install VM %s: %v", vmCopy.Name(), err)
 				return err
 			}
@@ -136,7 +112,7 @@ func createSliceFuncForUpdate(logger logx.Logger, targets []phase.Target, requir
 //
 // Notes:
 // - Each target must implement the Target interface.
-func UpdateVmOsApp(listRequiredPackage []string) phase.PhaseFunc {
+func InstallDaRepository(listDaRepo dnfapt.SliceDaRepository) phase.PhaseFunc {
 	return func(ctx context.Context, logger logx.Logger, targets []phase.Target, cmd ...string) (string, error) {
 
 		logger.Info("🅣 Starting phase: UpdateVmOsApp")
@@ -147,7 +123,7 @@ func UpdateVmOsApp(listRequiredPackage []string) phase.PhaseFunc {
 		}
 
 		// Build slice of functions
-		tasks := createSliceFuncForUpdate(logger, targets, listRequiredPackage)
+		tasks := createSliceFuncForInstallRepo(ctx, logger, targets, listDaRepo)
 
 		// Log number of tasks
 		logger.Infof("🅣 Phase UpdateVmOsApp has %d concurent tasks", len(tasks))
