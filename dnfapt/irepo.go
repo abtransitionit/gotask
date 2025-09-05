@@ -26,8 +26,8 @@ import (
 //
 // Notes:
 // - pure logic : no logging
-func installSingleDaRepoOnSingleVm(ctx context.Context, logger logx.Logger, vmName string, daRepo dnfapt.DaRepository) (string, error) {
-	logger.Debugf("will install dnfapt package repository: %v\n", daRepo.Name)
+func installSingleDaRepoOnSingleVm(ctx context.Context, logger logx.Logger, vmName string, daRepo dnfapt.DaRepo) (string, error) {
+	// logger.Debugf("will install dnfapt package repository: %v\n", daRepo.Name)
 	// get property
 	osFamily, err := property.GetProperty(vmName, "osfamily")
 	if err != nil {
@@ -41,6 +41,8 @@ func installSingleDaRepoOnSingleVm(ctx context.Context, logger logx.Logger, vmNa
 
 	logger.Debugf("%s:%s:%s Installing dnfapt package repository: %s", vmName, osFamily, osDistro, daRepo.Name)
 
+	// get the URLs resolve from template
+
 	// install the dnfapt package repository
 	_, err = dnfapt.InstallDaRepository(ctx, logger, osFamily, daRepo)
 	if err != nil {
@@ -50,7 +52,7 @@ func installSingleDaRepoOnSingleVm(ctx context.Context, logger logx.Logger, vmNa
 	logger.Debugf("%s:%s:%s Installed dnfapt package repository: %s", vmName, osFamily, osDistro, daRepo.Name)
 	return "", nil
 }
-func installListDaRepoOnSingleVm(ctx context.Context, logger logx.Logger, vmName string, listDaRepo dnfapt.SliceDaRepository) (string, error) {
+func installListDaRepoOnSingleVm(ctx context.Context, logger logx.Logger, vmName string, listDaRepo dnfapt.SliceDaRepo) (string, error) {
 	// log
 	logger.Debugf("%s: will install following dnfapt package repositories: %s", vmName, listDaRepo.GetListName())
 
@@ -82,7 +84,7 @@ func installListDaRepoOnSingleVm(ctx context.Context, logger logx.Logger, vmName
 //
 // - as many tasks as there are VMs
 // - Only VM targets are included; others are skipped with a warning.
-func createSliceFuncForInstallRepo(ctx context.Context, logger logx.Logger, targets []phase.Target, listDaRepo dnfapt.SliceDaRepository) []syncx.Func {
+func createSliceFuncForInstallRepo(ctx context.Context, logger logx.Logger, targets []phase.Target, listDaRepo dnfapt.SliceDaRepo) []syncx.Func {
 	var tasks []syncx.Func
 
 	for _, t := range targets {
@@ -117,7 +119,7 @@ func createSliceFuncForInstallRepo(ctx context.Context, logger logx.Logger, targ
 //
 // Notes:
 // - Each target must implement the Target interface.
-func InstallDaRepository(listDaRepo dnfapt.SliceDaRepository) phase.PhaseFunc {
+func InstallDaRepository(listDaRepo dnfapt.SliceDaRepo) phase.PhaseFunc {
 	return func(ctx context.Context, logger logx.Logger, targets []phase.Target, cmd ...string) (string, error) {
 
 		logger.Info("🅣 Starting phase: UpdateVmOsApp")
