@@ -101,7 +101,7 @@ func createSliceFuncForInstallRepo(ctx context.Context, logger logx.Logger, targ
 		vmCopy := vm // capture for closure
 		tasks = append(tasks, func() error {
 			if _, err := installListDaRepoOnSingleVm(ctx, logger, vmCopy.Name(), listDaRepo); err != nil {
-				logger.Errorf("🅣 Failed to install VM %s: %v", vmCopy.Name(), err)
+				logger.Errorf("🅣 Failed to install Dnfapt repository on VM %s: %v", vmCopy.Name(), err)
 				return err
 			}
 
