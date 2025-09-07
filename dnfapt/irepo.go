@@ -48,7 +48,7 @@ func installSingleDaRepoOnSingleVm(ctx context.Context, logger logx.Logger, vmNa
 	if err != nil {
 		return "", err
 	}
-	// get the URLs resolve from template
+	// get the repo file templated content
 	repoFileContent, err := dnfapt.GetRepoFileContent(osFamily, daRepo)
 	if err != nil {
 		return "", err
@@ -62,7 +62,30 @@ func installSingleDaRepoOnSingleVm(ctx context.Context, logger logx.Logger, vmNa
 		return "", fmt.Errorf("failed to play cli %s on vm '%s': %w", cli, vmName, err)
 	}
 
+	// download GPG key - only for debian. For rhel: gpg key url is included in the repo file and manage internally
+	if osFamily == "debian" {
+		// get the gpg file path
+		GpgFilePath, err := dnfapt.GetGpgFilePath(osFamily, daRepo)
+		if err != nil {
+			return "", err
+		}
+		// get the resolved Url
+		UrlGpgResolved, err := dnfapt.GetUrlGpgResolved(osFamily, daRepo)
+		if err != nil {
+			return "", err
+		}
+		// download the key to dst file
+		cli = filex.GetGpgFileFromUrlAsSudo(UrlGpgResolved, GpgFilePath)
+		_, err = run.RunCliSsh(vmName, cli)
+		if err != nil {
+			return "", fmt.Errorf("failed to play cli %s on vm '%s': %w", cli, vmName, err)
+		}
+		// log
+		logger.Debugf("🅱️ %s:%s:%s downloaded gpg key into file : %s", vmName, osFamily, osDistro, GpgFilePath)
+	}
+
 	// see the repo file
+	logger.Debugf("🅰️ %s:%s:%s creating file repoFilePath: %s", vmName, osFamily, osDistro, UrlGpgResolved)
 	cli = fmt.Sprintf("ls -ial %s && echo && cat %s", repoFilePath, repoFilePath)
 	output, err := run.RunCliSsh(vmName, cli)
 	if err != nil {
