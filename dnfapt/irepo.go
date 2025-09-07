@@ -7,8 +7,10 @@ import (
 
 	"github.com/abtransitionit/gocore/logx"
 	"github.com/abtransitionit/gocore/phase"
+	"github.com/abtransitionit/gocore/run"
 	"github.com/abtransitionit/gocore/syncx"
 	"github.com/abtransitionit/golinux/dnfapt"
+	"github.com/abtransitionit/golinux/filex"
 	"github.com/abtransitionit/golinux/property"
 )
 
@@ -41,13 +43,39 @@ func installSingleDaRepoOnSingleVm(ctx context.Context, logger logx.Logger, vmNa
 
 	logger.Debugf("%s:%s:%s Installing dnfapt package repository: %s", vmName, osFamily, osDistro, daRepo.Name)
 
-	// get the URLs resolve from template
-
-	// install the dnfapt package repository
-	_, err = dnfapt.InstallDaRepository(ctx, logger, osFamily, daRepo)
+	// get the repo file path
+	repoFilePath, err := dnfapt.GetRepoFilePath(osFamily, daRepo)
 	if err != nil {
 		return "", err
 	}
+	// get the URLs resolve from template
+	repoFileContent, err := dnfapt.GetRepoFileContent(osFamily, daRepo)
+	if err != nil {
+		return "", err
+	}
+
+	// save the repo file
+	logger.Debugf("🅰️ %s:%s:%s creating file repoFilePath: %s", vmName, osFamily, osDistro, repoFilePath)
+	cli := filex.CreateFileFromStringAsSudo(repoFilePath, repoFileContent)
+	_, err = run.RunCliSsh(vmName, cli)
+	if err != nil {
+		return "", fmt.Errorf("failed to play cli %s on vm '%s': %w", cli, vmName, err)
+	}
+
+	// see the repo file
+	cli = fmt.Sprintf("ls -ial %s && echo && cat %s", repoFilePath, repoFilePath)
+	output, err := run.RunCliSsh(vmName, cli)
+	if err != nil {
+		return "", fmt.Errorf("failed to play cli %s on vm '%s': %w", cli, vmName, err)
+	}
+	fmt.Println(output)
+	// log
+
+	// // install the dnfapt package repository
+	// _, err = dnfapt.InstallDaRepository(ctx, logger, osFamily, daRepo)
+	// if err != nil {
+	// 	return "", err
+	// }
 	// success
 	logger.Debugf("%s:%s:%s Installed dnfapt package repository: %s", vmName, osFamily, osDistro, daRepo.Name)
 	return "", nil
