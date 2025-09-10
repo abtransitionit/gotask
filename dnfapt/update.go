@@ -56,10 +56,20 @@ func updateSingleVmOsApp(logger logx.Logger, vmName string, requiredPackages []s
 			if osDistro == "debian" {
 				install = true
 			}
-			// case "gnupg":
-			// 	if osDistro == "debian" {
-			// 		install = true
-			// 	}
+		case "gnupg":
+			if osDistro == "debian" {
+				install = true
+			}
+			// case "almalinux":
+			// 	packageList = "dnf-utils python3-dnf-plugin-versionlock"
+			// 	// purpose     = "provision CLI needs-restarting versionlock"
+			// case "rocky":
+			// 	packageList = "python3-dnf-plugin-versionlock"
+			// 	// purpose     = "provision CLI versionlock"  ;;
+			// case "fedora":
+			// 	packageList = "dnf-utils"
+			// 	// purpose     = "provision CLI needs-restarting"  ;;
+
 		}
 
 		// if nothing to install

@@ -54,13 +54,29 @@ func installSingleDaRepoOnSingleVm(ctx context.Context, logger logx.Logger, vmNa
 		return "", err
 	}
 
+	// // display content before creating the file
+	// if repoFileContent != "" {
+	// 	fmt.Println("repoFileContent content before creating a file ")
+	// 	fmt.Println(repoFileContent)
+	// }
+
 	// save the repo file
-	logger.Debugf("🅰️ %s:%s:%s creating file repoFilePath: %s", vmName, osFamily, osDistro, repoFilePath)
+	// logger.Debugf("🅰️ %s:%s:%s creating dnfapt repo file : %s", vmName, osFamily, osDistro, repoFilePath)
 	cli := filex.CreateFileFromStringAsSudo(repoFilePath, repoFileContent)
 	_, err = run.RunCliSsh(vmName, cli)
 	if err != nil {
 		return "", fmt.Errorf("failed to play cli %s on vm '%s': %w", cli, vmName, err)
 	}
+	logger.Debugf("🅐 %s:%s:%s created dnfapt repo file : %s", vmName, osFamily, osDistro, repoFilePath)
+
+	// // display the repo file content
+	// cli = fmt.Sprintf("ls -ial %s && echo && cat %s", repoFilePath, repoFilePath)
+	// output, err := run.RunCliSsh(vmName, cli)
+	// if err != nil {
+	// 	return "", fmt.Errorf("failed to play cli %s on vm '%s': %w", cli, vmName, err)
+	// }
+	// logger.Debugf("🅱️ %s:%s:%s dnfapt repo file content after creation:", vmName, osFamily, osDistro)
+	// logger.Debugf("🅱️ %s", output)
 
 	// download GPG key - only for debian. For rhel: gpg key url is included in the repo file and manage internally
 	var urlGpgResolved string
@@ -83,27 +99,22 @@ func installSingleDaRepoOnSingleVm(ctx context.Context, logger logx.Logger, vmNa
 			return "", fmt.Errorf("failed to play cli %s on vm '%s': %w", cli, vmName, err)
 		}
 		// log
-		logger.Debugf("🅱️ %s:%s:%s CLI is %s", vmName, osFamily, osDistro, cli)
-		logger.Debugf("🅱️ %s:%s:%s downloaded gpg key into file : %s", vmName, osFamily, osDistro, GpgFilePath)
+		// logger.Debugf("🅱️ %s:%s:%s CLI is %s", vmName, osFamily, osDistro, cli)
+		logger.Debugf("🅑 %s:%s:%s downloaded gpg key into file : %s", vmName, osFamily, osDistro, GpgFilePath)
 	}
 
-	// see the repo file
-	logger.Debugf("🅰️ %s:%s:%s creating file repoFilePath: %s", vmName, osFamily, osDistro, urlGpgResolved)
-	cli = fmt.Sprintf("ls -ial %s && echo && cat %s", repoFilePath, repoFilePath)
-	output, err := run.RunCliSsh(vmName, cli)
+	// update the dnfapt package repository
+	cli, err = dnfapt.DaRepoUpdate(osFamily)
+	if err != nil {
+		return "", err
+	}
+	_, err = run.RunCliSsh(vmName, cli)
 	if err != nil {
 		return "", fmt.Errorf("failed to play cli %s on vm '%s': %w", cli, vmName, err)
 	}
-	fmt.Println(output)
-	// log
 
-	// // install the dnfapt package repository
-	// _, err = dnfapt.InstallDaRepository(ctx, logger, osFamily, daRepo)
-	// if err != nil {
-	// 	return "", err
-	// }
 	// success
-	logger.Debugf("%s:%s:%s Installed dnfapt package repository: %s", vmName, osFamily, osDistro, daRepo.Name)
+	logger.Debugf("🅒 %s:%s:%s  Installed and updated dnfapt package repository: %s", vmName, osFamily, osDistro, daRepo.Name)
 	return "", nil
 }
 func installListDaRepoOnSingleVm(ctx context.Context, logger logx.Logger, vmName string, listDaRepo dnfapt.SliceDaRepo) (string, error) {

@@ -98,7 +98,7 @@ func InstallSingleGoCliOnSingleVm(ctx context.Context, logger logx.Logger, vmNam
 		}
 
 		//success
-		logger.Debugf("🌐🅔 Exe:%s:%s copied to ", goCli.Name, filePath, dstFile)
+		logger.Debugf("🌐🅔 Exe:%s:%s copied to %s", goCli.Name, filePath, dstFile)
 	default:
 		return "", fmt.Errorf("unsupported file type %s", fileType)
 	}
