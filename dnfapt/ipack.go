@@ -13,60 +13,37 @@ import (
 	"github.com/abtransitionit/golinux/property"
 )
 
-// Name: upgradeSingleVm
-//
-// Description: the single task: update the OS with standard/required/missing dnfapt packages
-//
-// Parameters:
-//
-// - vmName: name of the VM
-//
-// Returns:
-// - nil if the VM is reachable,
-// - an error if the VM is not configured, not reachable or if there was an SSH failure.
-//
-// Notes:
-// - pure logic : no logging
-func installListStdPkgOnSingleVmOs(logger logx.Logger, vmName string, requiredPackages []string) (string, error) {
+func installlistDaPackOnSingleVm(ctx context.Context, logger logx.Logger, vmName string, listDaPack dnfapt.SliceDaPack) (string, error) {
+	// log
+	logger.Debugf("%s: will install following dnfapt package: %s", vmName, listDaPack.GetListName())
 
 	// get property
 	osFamily, err := property.GetProperty(vmName, "osfamily")
 	if err != nil {
 		return "", fmt.Errorf("%v", err)
 	}
-	// get property
-	osDistro, err := property.GetProperty(vmName, "osdistro")
-	if err != nil {
-		return "", fmt.Errorf("%v", err)
-	}
 
-	// loop over each package
-	logger.Debugf("will install required or missing packages: %v\n", requiredPackages)
-	for _, pkgName := range requiredPackages {
+	// loop over each cli
+	for _, daPkg := range listDaPack {
 
-		// get the CLI
-		cli, err := dnfapt.InstallStdDaPackage(osFamily, osDistro, pkgName)
+		// Get the CLI to install the dnfapt package
+		cli, err := dnfapt.InstallDaPackage(osFamily, daPkg)
 		if err != nil {
 			return "", err
 		}
-		// if nothing is to be installed
-		if cli == "" {
-			logger.Debugf("%s:%s:%s Skipping dnfapt package installation of : %s", vmName, osFamily, osDistro, pkgName)
-			continue
-		}
 
-		// play the CLI
-		logger.Debugf("%s:%s:%s Installing dnfapt package : %s", vmName, osFamily, osDistro, pkgName)
+		// // play the CLI
+		logger.Debugf("%s:%s installing package: %s", vmName, osFamily, daPkg.Name)
 		_, err = run.RunOnVm(vmName, cli)
 		if err != nil {
-			return "", fmt.Errorf("failed to install package %s OS on VM %s: %w", pkgName, vmName, err)
+			return "", err
 		}
-	}
 
+	}
 	return "", nil
 }
 
-// NAme: createSliceFunc
+// Name: createSliceFunc
 //
 // Description: create the slice of tasks
 //
@@ -82,7 +59,7 @@ func installListStdPkgOnSingleVmOs(logger logx.Logger, vmName string, requiredPa
 //
 // - as many tasks as there are VMs
 // - Only VM targets are included; others are skipped with a warning.
-func createSliceFuncForStdInstall(logger logx.Logger, targets []phase.Target, requiredPackages []string) []syncx.Func {
+func createSliceFuncForInstallPack(ctx context.Context, logger logx.Logger, targets []phase.Target, listDaPack dnfapt.SliceDaPack) []syncx.Func {
 	var tasks []syncx.Func
 
 	for _, t := range targets {
@@ -98,8 +75,8 @@ func createSliceFuncForStdInstall(logger logx.Logger, targets []phase.Target, re
 
 		vmCopy := vm // capture for closure
 		tasks = append(tasks, func() error {
-			if _, err := installListStdPkgOnSingleVmOs(logger, vmCopy.Name(), requiredPackages); err != nil {
-				logger.Errorf("🅣 Failed to install VM %s: %v", vmCopy.Name(), err)
+			if _, err := installlistDaPackOnSingleVm(ctx, logger, vmCopy.Name(), listDaPack); err != nil {
+				logger.Errorf("🅣 Failed to install Dnfapt repository on VM %s: %v", vmCopy.Name(), err)
 				return err
 			}
 
@@ -117,7 +94,7 @@ func createSliceFuncForStdInstall(logger logx.Logger, targets []phase.Target, re
 //
 // Notes:
 // - Each target must implement the Target interface.
-func UpdateVmOsApp(listRequiredPackage []string) phase.PhaseFunc {
+func InstallDaPackage(listDaPack dnfapt.SliceDaPack) phase.PhaseFunc {
 	return func(ctx context.Context, logger logx.Logger, targets []phase.Target, cmd ...string) (string, error) {
 
 		logger.Info("🅣 Starting phase: UpdateVmOsApp")
@@ -128,7 +105,7 @@ func UpdateVmOsApp(listRequiredPackage []string) phase.PhaseFunc {
 		}
 
 		// Build slice of functions
-		tasks := createSliceFuncForStdInstall(logger, targets, listRequiredPackage)
+		tasks := createSliceFuncForInstallPack(ctx, logger, targets, listDaPack)
 
 		// Log number of tasks
 		logger.Infof("🅣 Phase UpdateVmOsApp has %d concurent tasks", len(tasks))
