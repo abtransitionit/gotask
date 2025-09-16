@@ -12,7 +12,7 @@ import (
 	"github.com/abtransitionit/golinux/property"
 )
 
-func StartListOsServiceOnSingleVm(ctx context.Context, logger logx.Logger, vmName string, listOsServices oservice.SliceOsService) (string, error) {
+func EnableListOsServiceOnSingleVm(ctx context.Context, logger logx.Logger, vmName string, listOsServices oservice.SliceOsService) (string, error) {
 	// log
 	logger.Debugf("%s: will start following OS service(s): %s", vmName, listOsServices.GetListName())
 
@@ -26,12 +26,12 @@ func StartListOsServiceOnSingleVm(ctx context.Context, logger logx.Logger, vmNam
 	for _, osService := range listOsServices {
 
 		// Get the cli to start the service at runtime and after a reboot
-		cli, err := osService.Start(osFamily)
+		cli, err := osService.Enable(osFamily)
 		if err != nil {
 			return "", err
 		}
 		if cli == "" {
-			logger.Debugf("%s: 🅐 skipping starting service %s", vmName, osService.Name)
+			logger.Debugf("%s: 🅐 skipping enabling service %s", vmName, osService.Name)
 			continue
 		}
 
@@ -47,12 +47,12 @@ func StartListOsServiceOnSingleVm(ctx context.Context, logger logx.Logger, vmNam
 		if err != nil {
 			return "", fmt.Errorf("%v", err)
 		}
-		logger.Debugf("%s:%s:%s 🅑 started service & status is %s", vmName, osFamily, osService.Name, serviceStatus)
+		logger.Debugf("%s:%s:%s 🅑 enabled service & status is %s", vmName, osFamily, osService.Name, serviceStatus)
 	}
 	return "", nil
 }
 
-func createSliceFuncForStartOsService(ctx context.Context, logger logx.Logger, targets []phase.Target, listOsServices oservice.SliceOsService) []syncx.Func {
+func createSliceFuncForEnableOsService(ctx context.Context, logger logx.Logger, targets []phase.Target, listOsServices oservice.SliceOsService) []syncx.Func {
 	var tasks []syncx.Func
 
 	for _, t := range targets {
@@ -69,7 +69,7 @@ func createSliceFuncForStartOsService(ctx context.Context, logger logx.Logger, t
 		vmCopy := vm // capture for closure
 		// define the job of the task and add it to the slice
 		tasks = append(tasks, func() error {
-			if _, err := StartListOsServiceOnSingleVm(ctx, logger, vmCopy.Name(), listOsServices); err != nil {
+			if _, err := EnableListOsServiceOnSingleVm(ctx, logger, vmCopy.Name(), listOsServices); err != nil {
 				logger.Errorf("🅣 Failed to execute task on VM %s: %v", vmCopy.Name(), err)
 				return err
 			}
@@ -81,7 +81,7 @@ func createSliceFuncForStartOsService(ctx context.Context, logger logx.Logger, t
 	return tasks
 }
 
-func StartOsService(listOsServices []oservice.OsService) phase.PhaseFunc {
+func EnableOsService(listOsServices []oservice.OsService) phase.PhaseFunc {
 	return func(ctx context.Context, logger logx.Logger, targets []phase.Target, cmd ...string) (string, error) {
 		appx := "InstallOsService"
 		logger.Infof("🅣 Starting phase: %s", appx)
@@ -92,7 +92,7 @@ func StartOsService(listOsServices []oservice.OsService) phase.PhaseFunc {
 		}
 
 		// Build slice of functions
-		tasks := createSliceFuncForStartOsService(ctx, logger, targets, listOsServices)
+		tasks := createSliceFuncForEnableOsService(ctx, logger, targets, listOsServices)
 
 		// Log number of tasks
 		logger.Infof("🅣 Phase %s has %d concurent tasks", appx, len(tasks))
