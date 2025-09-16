@@ -19,6 +19,7 @@ func configureSelinuxOnSingleVm(ctx context.Context, logger logx.Logger, vmName 
 	if err != nil {
 		return "", fmt.Errorf("%v", err)
 	}
+
 	// get property - before changes
 	selinuxStatus, err := property.GetProperty(vmName, "selinuxStatus")
 	if err != nil {

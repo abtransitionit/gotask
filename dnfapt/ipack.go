@@ -32,7 +32,7 @@ func installlistDaPackOnSingleVm(ctx context.Context, logger logx.Logger, vmName
 			return "", err
 		}
 
-		// // play the CLI
+		// play the CLI
 		logger.Debugf("%s:%s installing package: %s", vmName, osFamily, daPkg.Name)
 		_, err = run.RunOnVm(vmName, cli)
 		if err != nil {
