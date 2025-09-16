@@ -14,7 +14,7 @@ import (
 
 func EnableListOsServiceOnSingleVm(ctx context.Context, logger logx.Logger, vmName string, listOsServices oservice.SliceOsService) (string, error) {
 	// log
-	logger.Debugf("%s: will start following OS service(s): %s", vmName, listOsServices.GetListName())
+	logger.Debugf("%s: will enable following OS service(s) to start after a reboot : %s", vmName, listOsServices.GetListName())
 
 	// get property
 	osFamily, err := property.GetProperty(vmName, "osfamily")
@@ -42,8 +42,8 @@ func EnableListOsServiceOnSingleVm(ctx context.Context, logger logx.Logger, vmNa
 		if err != nil {
 			return "", fmt.Errorf("%s: failed to play cli  on vm : '%s': %w", vmName, cli, err)
 		}
-		// get property - before changes
-		serviceStatus, err := property.GetProperty(vmName, "serviceStatus", osService.Name)
+		// get property - after changes
+		serviceStatus, err := property.GetProperty(vmName, "serviceEnabled", osService.Name)
 		if err != nil {
 			return "", fmt.Errorf("%v", err)
 		}
