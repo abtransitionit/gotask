@@ -83,7 +83,7 @@ func createSliceFuncForStartOsService(ctx context.Context, logger logx.Logger, t
 
 func StartOsService(listOsServices []oservice.OsService) phase.PhaseFunc {
 	return func(ctx context.Context, logger logx.Logger, targets []phase.Target, cmd ...string) (string, error) {
-		appx := "InstallOsService"
+		appx := "StartOsService"
 		logger.Infof("🅣 Starting phase: %s", appx)
 		// check paramaters
 		if len(targets) == 0 {
