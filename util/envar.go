@@ -75,8 +75,11 @@ func createSliceFuncEnvar(ctx context.Context, logger logx.Logger, targets []pha
 
 func SetEnvar(customRcFileName string, listEnvVar envar.SliceEnvVar) phase.PhaseFunc {
 	return func(ctx context.Context, logger logx.Logger, targets []phase.Target, cmd ...string) (string, error) {
-		appx := "GetPath"
+		appx := "SetEnvar"
+
+		// log
 		logger.Infof("🅣 Starting phase: %s", appx)
+
 		// check paramaters
 		if len(targets) == 0 {
 			logger.Warnf("🅣 No targets provided to phase: %s", appx)

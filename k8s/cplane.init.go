@@ -64,6 +64,7 @@ func createSliceFuncForInitCOntrolPlane(ctx context.Context, logger logx.Logger,
 
 func InitCPlane(targetsCPlane []phase.Target, k8sConf k8s.K8sConf) phase.PhaseFunc {
 	return func(ctx context.Context, logger logx.Logger, targets []phase.Target, cmd ...string) (string, error) {
+
 		appx := "InitCplane"
 		logger.Infof("🅣 Starting phase: %s", appx)
 		// check paramaters

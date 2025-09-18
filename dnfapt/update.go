@@ -119,11 +119,14 @@ func createSliceFuncForStdInstall(logger logx.Logger, targets []phase.Target, re
 // - Each target must implement the Target interface.
 func UpdateVmOsApp(listRequiredPackage []string) phase.PhaseFunc {
 	return func(ctx context.Context, logger logx.Logger, targets []phase.Target, cmd ...string) (string, error) {
+		appx := "UpdateVmOsApp"
 
-		logger.Info("🅣 Starting phase: UpdateVmOsApp")
+		// log
+		logger.Infof("🅣 Starting phase: %s", appx)
+
 		// check paramaters
 		if len(targets) == 0 {
-			logger.Warn("🅣 No targets provided to : UpdateVmOsApp")
+			logger.Warnf("🅣 No targets provided to phase: %s", appx)
 			return "", nil
 		}
 
@@ -131,13 +134,15 @@ func UpdateVmOsApp(listRequiredPackage []string) phase.PhaseFunc {
 		tasks := createSliceFuncForStdInstall(logger, targets, listRequiredPackage)
 
 		// Log number of tasks
-		logger.Infof("🅣 Phase UpdateVmOsApp has %d concurent tasks", len(tasks))
+		logger.Infof("🅣 Phase %s has %d concurent tasks", appx, len(tasks))
 
 		// Run tasks in the slice concurrently
 		if errs := syncx.RunConcurrently(ctx, tasks); errs != nil {
 			return "", errs[0] // return first error encountered
 		}
 
-		return fmt.Sprintf("🅣 Terminated phase UpdateVmOsApp on %d VM(s)", len(tasks)), nil
+		// return fmt.Sprintf("🅣 Terminated phase UpdateVmOsApp on %d VM(s)", len(tasks)), nil
+		return "", nil
+
 	}
 }

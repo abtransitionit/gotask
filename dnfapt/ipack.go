@@ -94,13 +94,19 @@ func createSliceFuncForInstallPack(ctx context.Context, logger logx.Logger, targ
 //
 // Notes:
 // - Each target must implement the Target interface.
-func InstallDaPackage(listDaPack dnfapt.SliceDaPack) phase.PhaseFunc {
+func InstallDaPackage(listDaPack dnfapt.SliceDaPack, alternativeTargets ...[]phase.Target) phase.PhaseFunc {
 	return func(ctx context.Context, logger logx.Logger, targets []phase.Target, cmd ...string) (string, error) {
+		appx := "InstallDaRepository"
 
-		logger.Info("🅣 Starting phase: UpdateVmOsApp")
+		// set final targets
+		if len(alternativeTargets) > 0 {
+			targets = alternativeTargets[0]
+		}
+		// log
+		logger.Infof("🅣 Starting phase: %s", appx)
 		// check paramaters
 		if len(targets) == 0 {
-			logger.Warn("🅣 No targets provided to : UpdateVmOsApp")
+			logger.Warnf("🅣 No targets provided to phase: %s", appx)
 			return "", nil
 		}
 
@@ -108,13 +114,14 @@ func InstallDaPackage(listDaPack dnfapt.SliceDaPack) phase.PhaseFunc {
 		tasks := createSliceFuncForInstallPack(ctx, logger, targets, listDaPack)
 
 		// Log number of tasks
-		logger.Infof("🅣 Phase UpdateVmOsApp has %d concurent tasks", len(tasks))
+		logger.Infof("🅣 Phase %s has %d concurent tasks", appx, len(tasks))
 
 		// Run tasks in the slice concurrently
 		if errs := syncx.RunConcurrently(ctx, tasks); errs != nil {
 			return "", errs[0] // return first error encountered
 		}
 
-		return fmt.Sprintf("🅣 Terminated phase UpdateVmOsApp on %d VM(s)", len(tasks)), nil
+		// return fmt.Sprintf("🅣 Terminated phase UpdateVmOsApp on %d VM(s)", len(tasks)), nil
+		return "", nil
 	}
 }

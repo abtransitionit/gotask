@@ -11,12 +11,15 @@ import (
 	"github.com/abtransitionit/golinux/k8s"
 )
 
-func ResetSingleControlPlane(ctx context.Context, logger logx.Logger, vmName string) (string, error) {
+// Name: ResetSingleNode
+//
+// Description: Reset a Node (control plane or worker) to a standard VM
+func ResetSingleNode(ctx context.Context, logger logx.Logger, vmName string) (string, error) {
 	// log
-	logger.Debugf("%s: will reset this K8s control plane to a standard VM", vmName)
+	logger.Debugf("%s: will reset this Node (control plane or worker) to a standard VM", vmName)
 
 	// get CLI to initialize the control plane
-	cli, err := k8s.ResetCPlane()
+	cli, err := k8s.ResetNode()
 	if err != nil {
 		return "", err
 	}
@@ -32,7 +35,7 @@ func ResetSingleControlPlane(ctx context.Context, logger logx.Logger, vmName str
 	return "", nil
 }
 
-func createSliceFuncForResetControlPlane(ctx context.Context, logger logx.Logger, targets []phase.Target) []syncx.Func {
+func createSliceFuncForResetNode(ctx context.Context, logger logx.Logger, targets []phase.Target) []syncx.Func {
 	var tasks []syncx.Func
 
 	for _, target := range targets {
@@ -49,7 +52,7 @@ func createSliceFuncForResetControlPlane(ctx context.Context, logger logx.Logger
 		vmCopy := vm // capture for closure
 		// define the job of the task and add it to the slice
 		tasks = append(tasks, func() error {
-			if _, err := ResetSingleControlPlane(ctx, logger, vmCopy.Name()); err != nil {
+			if _, err := ResetSingleNode(ctx, logger, vmCopy.Name()); err != nil {
 				logger.Errorf("🅣 Failed to execute task on VM %s: %v", vmCopy.Name(), err)
 				return err
 			}
@@ -61,18 +64,18 @@ func createSliceFuncForResetControlPlane(ctx context.Context, logger logx.Logger
 	return tasks
 }
 
-func ResetCPlane(targetsCPlane []phase.Target) phase.PhaseFunc {
+func ResetNode(targetsNode []phase.Target) phase.PhaseFunc {
 	return func(ctx context.Context, logger logx.Logger, targets []phase.Target, cmd ...string) (string, error) {
-		appx := "InitCplane"
+		appx := "ResetNode"
 		logger.Infof("🅣 Starting phase: %s", appx)
 		// check paramaters
-		if len(targetsCPlane) == 0 {
+		if len(targetsNode) == 0 {
 			logger.Warnf("🅣 No targets provided to phase: %s", appx)
 			return "", nil
 		}
 
 		// Build slice of functions
-		tasks := createSliceFuncForResetControlPlane(ctx, logger, targetsCPlane)
+		tasks := createSliceFuncForResetNode(ctx, logger, targetsNode)
 
 		// Log number of tasks
 		logger.Infof("🅣 Phase %s has %d concurent tasks", appx, len(tasks))

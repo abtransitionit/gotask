@@ -101,11 +101,14 @@ func createSliceFuncForUpgrade(l logx.Logger, targets []phase.Target) []syncx.Fu
 // Notes:
 // - Each target must implement the Target interface.
 func UpgradeVmOs(ctx context.Context, logger logx.Logger, targets []phase.Target, cmd ...string) (string, error) {
+	appx := "UpgradeVmOs"
 
-	logger.Info("🅣 Starting phase: UpgradeVmOs")
+	// log
+	logger.Infof("🅣 Starting phase: %s", appx)
+
 	// check paramaters
 	if len(targets) == 0 {
-		logger.Warn("🅣 No targets provided to : UpgradeVmOs")
+		logger.Warnf("🅣 No targets provided to phase: %s", appx)
 		return "", nil
 	}
 
@@ -113,12 +116,13 @@ func UpgradeVmOs(ctx context.Context, logger logx.Logger, targets []phase.Target
 	tasks := createSliceFuncForUpgrade(logger, targets)
 
 	// Log number of tasks
-	logger.Infof("🅣 Phase UpgradeVmOs has %d concurent tasks", len(tasks))
+	logger.Infof("🅣 Phase %s has %d concurent tasks", appx, len(tasks))
 
 	// Run tasks in the slice concurrently
 	if errs := syncx.RunConcurrently(ctx, tasks); errs != nil {
 		return "", errs[0] // return first error encountered
 	}
 
-	return fmt.Sprintf("🅣 Terminated phase UpgradeVmOs on %d VM(s)", len(tasks)), nil
+	// return fmt.Sprintf("🅣 Terminated phase UpgradeVmOs on %d VM(s)", len(tasks)), nil
+	return "", nil
 }
