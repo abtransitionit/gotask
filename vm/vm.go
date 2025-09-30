@@ -22,7 +22,7 @@ import (
 //
 // Notes:
 // - pure logic : no logging
-func checkSingleVmIsSshReachable(vm *phase.Vm) error {
+func checkSingleVmIsSshReachable(vm *phase.Vm, logger logx.Logger) error {
 	reachable, err := run.IsVmSshReachable(vm.Name())
 	if err != nil {
 		return errorx.NewWithNoStack("🅣 SSH check failed for VM %s", vm.Name())
@@ -30,6 +30,7 @@ func checkSingleVmIsSshReachable(vm *phase.Vm) error {
 	if !reachable {
 		return errorx.NewWithNoStack("🅣 VM %s is not reachable via SSH", vm.Name())
 	}
+	logger.Infof("%s: VM is ssh reachable", vm.NameStr)
 	return nil
 }
 
@@ -49,7 +50,7 @@ func checkSingleVmIsSshReachable(vm *phase.Vm) error {
 //
 // - as many tasks as there are VMs
 // - Only VM targets are included; others are skipped with a warning.
-func createSliceFunc(logger logx.Logger, targets []phase.Target) []syncx.Func {
+func createSliceFunc(targets []phase.Target, logger logx.Logger) []syncx.Func {
 
 	var tasks []syncx.Func // the slice
 
@@ -69,7 +70,7 @@ func createSliceFunc(logger logx.Logger, targets []phase.Target) []syncx.Func {
 		vmCopy := vm // capture for closure
 		// define and add each task to the slice
 		tasks = append(tasks, func() error {
-			if err := checkSingleVmIsSshReachable(vmCopy); err != nil {
+			if err := checkSingleVmIsSshReachable(vmCopy, logger); err != nil {
 				logger.Errorf("%s", err)
 				return err
 			}
@@ -95,7 +96,7 @@ func CheckVmSshAccess(ctx context.Context, logger logx.Logger, targets []phase.T
 	}
 
 	// Build slice of functions
-	tasks := createSliceFunc(logger, targets)
+	tasks := createSliceFunc(targets, logger)
 
 	// Log number of tasks
 	logger.Infof("🅣 Phase has %d concurent tasks", len(tasks))
