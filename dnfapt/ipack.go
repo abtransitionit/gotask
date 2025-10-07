@@ -104,6 +104,7 @@ func InstallDaPackage(listDaPack dnfapt.SliceDaPack, alternativeTargets ...[]pha
 		}
 		// log
 		logger.Infof("🅣 Starting phase: %s", appx)
+
 		// check paramaters
 		if len(targets) == 0 {
 			logger.Warnf("🅣 No targets provided to phase: %s", appx)

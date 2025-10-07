@@ -187,10 +187,18 @@ func createSliceFuncForInstall(ctx context.Context, logger logx.Logger, targets 
 //
 // Notes:
 // - Each target must implement the Target interface.
-func InstallOnVm(listGoClis []gocli.GoCli) phase.PhaseFunc {
+func InstallGoCliOnVm(listGoClis []gocli.GoCli, alternativeTargets ...[]phase.Target) phase.PhaseFunc {
 	return func(ctx context.Context, logger logx.Logger, targets []phase.Target, cmd ...string) (string, error) {
 		appx := "InstallGoCliOnVm"
+
+		// set final targets
+		if len(alternativeTargets) > 0 {
+			targets = alternativeTargets[0]
+		}
+
+		// log
 		logger.Infof("🅣 Starting phase: %s", appx)
+
 		// check paramaters
 		if len(targets) == 0 {
 			logger.Warnf("🅣 No targets provided to phase: %s", appx)

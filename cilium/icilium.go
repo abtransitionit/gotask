@@ -9,8 +9,6 @@ import (
 )
 
 func installCniCiliumOnSingleVm(ctx context.Context, logger logx.Logger, vmName string) (string, error) {
-	logger.Debugf("%s Installing cilium repository: %s", vmName)
-	logger.Debugf("%s Installing cilium chart", vmName)
 	logger.Debugf("%s Installing cilium release", vmName)
 
 	return "", nil
