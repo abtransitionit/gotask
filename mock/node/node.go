@@ -36,24 +36,36 @@ func CheckSshConf(targetList []string, logger logx.Logger) (bool, error) {
 
 	// If any node failed, return a single error message
 	if len(failedTargets) > 0 {
-		return false, fmt.Errorf("SSH not configured for nodes: %v", failedTargets)
+		return false, fmt.Errorf("SSH not configured for targetList: %v", failedTargets)
 	}
 
 	return true, nil
 }
 
-// Description: check if a set of nodes are SSH reachable.
-func CheckSshAccess(nodes []string, logger logx.Logger) (bool, error) {
+// Description: check if a set of ssh targets are SSH reachable.
+func CheckSshAccess(targetList []string, logger logx.Logger) (bool, error) {
 	results := make(map[string]bool)
+	var failedNodes []string
 
-	for _, node := range nodes {
-		ok, err := lnode.IsSshReachable(node, logger)
+	for _, target := range targetList {
+		ok, err := lnode.IsSshReachable(target, logger)
 		if err != nil {
-			return false, fmt.Errorf("node %q: error checking SSH reachability: %w", node, err)
+			logger.Warnf("Error checking SSH reachability for node %q: %v", target, err)
+			failedNodes = append(failedNodes, target)
+			continue
 		}
-		results[node] = ok
-		logger.Infof("Node %q: SSH reachable = %v", node, ok)
+
+		results[target] = ok
+		logger.Infof("Node %q: SSH reachable = %v", target, ok)
+
+		if !ok {
+			failedNodes = append(failedNodes, target)
+		}
 	}
-	// success
+
+	if len(failedNodes) > 0 {
+		return false, fmt.Errorf("SSH not reachable for targetList: %v", failedNodes)
+	}
+
 	return true, nil
 }
