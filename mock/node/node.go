@@ -7,28 +7,38 @@ import (
 	lnode "github.com/abtransitionit/golinux/mock/node"
 )
 
-// Description: check if a set of nodes are SSH configured.
-// CheckSshConf checks SSH configuration for a list of nodes.
-func CheckSshConf(nodes []string, logger logx.Logger) (bool, error) {
-	results := make(map[string]bool)
+// Description: check if a set of targets are SSH configured.
+//
+// Notes:
+// - a target is a remote VM, the localhost or a container
+func CheckSshConf(targetList []string, logger logx.Logger) (bool, error) {
 
-	for _, node := range nodes {
-		ok, err := lnode.IsSshConfigured(node, logger)
+	results := make(map[string]bool) // collector
+	var failedTargets []string       // slice of taget for which SSH is not configured
+
+	// loop over each target
+	for _, target := range targetList {
+		// check if SSH is configured
+		oko, err := lnode.IsSshConfigured(target, logger)
+		// handle system error
 		if err != nil {
-			return false, fmt.Errorf("checking SSH config for node %q: %w", node, err)
+			logger.Warnf("Target %s: > system error > checking SSH config: %v", target, err)
+			failedTargets = append(failedTargets, target)
+			continue
 		}
-		results[node] = ok
-		logger.Infof("Node %q: SSH configured = %v", node, ok)
+		results[target] = oko
+		logger.Infof("Target %s: > SSH configured > %v", target, oko)
+
+		if !oko {
+			failedTargets = append(failedTargets, target)
+		}
 	}
 
-	// check if any node failed
-	for node, ok := range results {
-		if !ok {
-			return false, fmt.Errorf("SSH not configured for node %q", node)
-		}
+	// If any node failed, return a single error message
+	if len(failedTargets) > 0 {
+		return false, fmt.Errorf("SSH not configured for nodes: %v", failedTargets)
 	}
 
-	// success
 	return true, nil
 }
 
