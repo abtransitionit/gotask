@@ -8,6 +8,7 @@ import (
 )
 
 // Description: check if a set of nodes are SSH configured.
+// CheckSshConf checks SSH configuration for a list of nodes.
 func CheckSshConf(nodes []string, logger logx.Logger) (bool, error) {
 	results := make(map[string]bool)
 
@@ -19,6 +20,14 @@ func CheckSshConf(nodes []string, logger logx.Logger) (bool, error) {
 		results[node] = ok
 		logger.Infof("Node %q: SSH configured = %v", node, ok)
 	}
+
+	// check if any node failed
+	for node, ok := range results {
+		if !ok {
+			return false, fmt.Errorf("SSH not configured for node %q", node)
+		}
+	}
+
 	// success
 	return true, nil
 }
