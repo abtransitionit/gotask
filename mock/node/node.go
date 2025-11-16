@@ -58,10 +58,10 @@ func CheckSshAccess(targetName string, nodeList []string, logger logx.Logger) (b
 	results := make(map[string]bool) // collector
 	var failedNodes []string         // slice of nodes that are not SSH reachable
 
-	// loop over each node
+	// loop over item (node)
 	for _, node := range nodeList {
 
-		// play CLI - check if node is SSH reachable for the couple target/node
+		// play CLI for each item - check if node is SSH reachable for the couple target/node
 		oko, err := lnode.IsSshReachable(targetName, node, logger)
 
 		// handle system error
@@ -70,7 +70,7 @@ func CheckSshAccess(targetName string, nodeList []string, logger logx.Logger) (b
 			continue
 		}
 
-		// collect results
+		// manage and collect logic errors
 		results[node] = oko
 		if !oko {
 			failedNodes = append(failedNodes, node)
@@ -79,10 +79,11 @@ func CheckSshAccess(targetName string, nodeList []string, logger logx.Logger) (b
 		}
 	}
 
-	// If any node failed, return a single error message
+	// errors summary
 	if len(failedNodes) > 0 {
 		return false, fmt.Errorf("target: %s > Node(s) that are not SSH reachable: %v", targetName, failedNodes)
 	}
 
+	// handle success
 	return true, nil
 }
