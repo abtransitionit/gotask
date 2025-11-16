@@ -28,6 +28,8 @@ func MergeDevToMain(targetName string, repoList []string, logger logx.Logger) (b
 		if !ok {
 			failed = append(failed, repo)
 			logger.Debugf("target: %s > repo %s > git op failed", targetName, repo)
+		} else {
+			logger.Debugf("target: %s > repo %s > update with success", targetName, repo)
 		}
 	}
 
