@@ -7,64 +7,81 @@ import (
 	lnode "github.com/abtransitionit/golinux/mock/node"
 )
 
-// Description: check if a set of targets are SSH configured.
+// Description: check if a node is SSH configured on a target (for a set of nodes).
 //
 // Notes:
-// - a target is a remote VM, the localhost or a container
-func CheckSshConf(targetList []string, logger logx.Logger) (bool, error) {
+// - a node is a remote VM, the localhost, a container or a remote container
+// - a target is a node from which the ssh command is executed
+func CheckSshConf(targetName string, nodeList []string, logger logx.Logger) (bool, error) {
 
 	results := make(map[string]bool) // collector
-	var failedTargets []string       // slice of taget for which SSH is not configured
+	var failedNodes []string         // slice of node that are not SSH configured
 
-	// loop over each target
-	for _, target := range targetList {
-		// check if SSH is configured
-		oko, err := lnode.IsSshConfigured(target, logger)
+	// loop over each node
+	for _, node := range nodeList {
+
+		// play CLI - check if SSH is configured for the couple target/node
+		oko, err := lnode.IsSshConfigured(targetName, node, logger)
+
 		// handle system error
 		if err != nil {
-			logger.Warnf("Target %s: > system error > checking SSH config: %v", target, err)
-			failedTargets = append(failedTargets, target)
+			logger.Warnf("target: %s > Node %s: > system error > checking SSH config: %v", targetName, node, err)
 			continue
 		}
-		results[target] = oko
-		logger.Infof("Target %s: > SSH configured > %v", target, oko)
+		// failedNodes = append(failedNodes, node)
 
+		// collect results
+		results[node] = oko
 		if !oko {
-			failedTargets = append(failedTargets, target)
+			failedNodes = append(failedNodes, node) // logical error: SSH simply not configured
+			logger.Debugf("taget: %s > Node %s: > is not SSH configured", targetName, node)
+		}
+
+	}
+
+	// If any node failed, return a single error message
+	if len(failedNodes) > 0 {
+		return false, fmt.Errorf("target: %s > Node(s) that are not SSH configured: %v", targetName, failedNodes)
+	}
+
+	// handle success
+	return true, nil
+}
+
+// Description: check if a node is SSH reachable from a target (for a set of nodes).
+//
+// Notes:
+// - a node is a remote VM, the localhost, a container or a remote container
+// - a target is a node from which the ssh command is executed
+func CheckSshAccess(targetName string, nodeList []string, logger logx.Logger) (bool, error) {
+
+	results := make(map[string]bool) // collector
+	var failedNodes []string         // slice of nodes that are not SSH reachable
+
+	// loop over each node
+	for _, node := range nodeList {
+
+		// play CLI - check if node is SSH reachable for the couple target/node
+		oko, err := lnode.IsSshReachable(targetName, node, logger)
+
+		// handle system error
+		if err != nil {
+			logger.Warnf("target: %s > node %s: > system error > checking SSH access: %v", targetName, node, err)
+			continue
+		}
+
+		// collect results
+		results[node] = oko
+		if !oko {
+			failedNodes = append(failedNodes, node)
+			// log
+			logger.Infof("target: %s > node %s: > is not SSH reachable", targetName, node)
 		}
 	}
 
 	// If any node failed, return a single error message
-	if len(failedTargets) > 0 {
-		return false, fmt.Errorf("SSH not configured for targetList: %v", failedTargets)
-	}
-
-	return true, nil
-}
-
-// Description: check if a set of ssh targets are SSH reachable.
-func CheckSshAccess(targetList []string, logger logx.Logger) (bool, error) {
-	results := make(map[string]bool)
-	var failedNodes []string
-
-	for _, target := range targetList {
-		ok, err := lnode.IsSshReachable(target, logger)
-		if err != nil {
-			logger.Warnf("Error checking SSH reachability for node %q: %v", target, err)
-			failedNodes = append(failedNodes, target)
-			continue
-		}
-
-		results[target] = ok
-		logger.Infof("Node %q: SSH reachable = %v", target, ok)
-
-		if !ok {
-			failedNodes = append(failedNodes, target)
-		}
-	}
-
 	if len(failedNodes) > 0 {
-		return false, fmt.Errorf("SSH not reachable for targetList: %v", failedNodes)
+		return false, fmt.Errorf("target: %s > Node(s) that are not SSH reachable: %v", targetName, failedNodes)
 	}
 
 	return true, nil
