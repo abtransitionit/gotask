@@ -23,10 +23,6 @@ func MergeDevToMain(targetName string, paramList [][]any, logger logx.Logger) (b
 	}
 	repoFolder := fmt.Sprint(paramList[1][0])
 
-	// log
-	logger.Debugf("target: %s > repo list: %v", targetName, repoList)
-	logger.Debugf("target: %s > repo folder: %s", targetName, repoFolder)
-
 	// define var
 	var failed []string
 	results := make(map[string]bool)
