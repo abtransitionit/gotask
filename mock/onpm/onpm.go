@@ -36,14 +36,6 @@ func UpgradeOs(targetName string, paramList [][]any, logger logx.Logger) (bool, 
 			logger.Warnf("target: %s > Node %s: > system error > checking SSH config: %v", targetName, node, err)
 			continue
 		}
-		// failedNodes = append(failedNodes, node)
-
-		// // collect results
-		// results[node] = oko
-		// if !oko {
-		// 	failedNodes = append(failedNodes, node) // logical error: SSH simply not configured
-		// 	logger.Debugf("taget: %s > Node %s: > is not SSH configured", targetName, node)
-		// }
 
 	}
 

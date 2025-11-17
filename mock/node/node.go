@@ -28,7 +28,7 @@ func CheckSshConf(targetName string, paramList [][]any, logger logx.Logger) (boo
 	for _, node := range nodeList {
 
 		// play CLI - check if SSH is configured for the couple target/node
-		oko, err := lnode.IsSshConfigured(targetName, node, logger)
+		ok, err := lnode.IsSshConfigured(targetName, node, logger)
 
 		// handle system error
 		if err != nil {
@@ -38,8 +38,8 @@ func CheckSshConf(targetName string, paramList [][]any, logger logx.Logger) (boo
 		// failedNodes = append(failedNodes, node)
 
 		// collect results
-		results[node] = oko
-		if !oko {
+		results[node] = ok
+		if !ok {
 			failedNodes = append(failedNodes, node) // logical error: SSH simply not configured
 			logger.Debugf("taget: %s > Node %s: > is not SSH configured", targetName, node)
 		}
@@ -76,7 +76,7 @@ func CheckSshAccess(targetName string, paramList [][]any, logger logx.Logger) (b
 	for _, node := range nodeList {
 
 		// play CLI for each item - check if node is SSH reachable for the couple target/node
-		oko, err := lnode.IsSshReachable(targetName, node, logger)
+		ok, err := lnode.IsSshReachable(targetName, node, logger)
 
 		// handle system error
 		if err != nil {
@@ -85,8 +85,8 @@ func CheckSshAccess(targetName string, paramList [][]any, logger logx.Logger) (b
 		}
 
 		// manage and collect logic errors
-		results[node] = oko
-		if !oko {
+		results[node] = ok
+		if !ok {
 			failedNodes = append(failedNodes, node)
 			// log
 			logger.Infof("target: %s > node %s: > is not SSH reachable", targetName, node)
