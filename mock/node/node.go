@@ -7,7 +7,7 @@ import (
 	lnode "github.com/abtransitionit/golinux/mock/node"
 )
 
-// Description: check if a node is SSH configured on a target (for a set of nodes).
+// Description: check if a set of node is SSH configured on a target.
 //
 // Notes:
 // - a node is a remote VM, the localhost, a container or a remote container
@@ -55,7 +55,7 @@ func CheckSshConf(targetName string, paramList [][]any, logger logx.Logger) (boo
 	return true, nil
 }
 
-// Description: check if a node is SSH reachable from a target (for a set of nodes).
+// Description: check if a set of node is SSH reachable from a target
 //
 // Notes:
 // - a node is a remote VM, the localhost, a container or a remote container
