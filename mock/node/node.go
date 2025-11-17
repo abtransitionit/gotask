@@ -12,8 +12,15 @@ import (
 // Notes:
 // - a node is a remote VM, the localhost, a container or a remote container
 // - a target is a node from which the ssh command is executed
-func CheckSshConf(targetName string, nodeList []string, logger logx.Logger) (bool, error) {
+func CheckSshConf(targetName string, paramList [][]any, logger logx.Logger) (bool, error) {
 
+	// 1 - extract parameters
+	nodeList := []string{}
+	for _, v := range paramList[0] {
+		nodeList = append(nodeList, fmt.Sprint(v)) // converts any -> string
+	}
+
+	// define var
 	results := make(map[string]bool) // collector
 	var failedNodes []string         // slice of node that are not SSH configured
 
@@ -53,8 +60,15 @@ func CheckSshConf(targetName string, nodeList []string, logger logx.Logger) (boo
 // Notes:
 // - a node is a remote VM, the localhost, a container or a remote container
 // - a target is a node from which the ssh command is executed
-func CheckSshAccess(targetName string, nodeList []string, logger logx.Logger) (bool, error) {
+func CheckSshAccess(targetName string, paramList [][]any, logger logx.Logger) (bool, error) {
 
+	// 1 - extract parameters
+	nodeList := []string{}
+	for _, v := range paramList[0] {
+		nodeList = append(nodeList, fmt.Sprint(v)) // converts any -> string
+	}
+
+	// define var
 	results := make(map[string]bool) // collector
 	var failedNodes []string         // slice of nodes that are not SSH reachable
 
