@@ -5,22 +5,45 @@ import (
 	lonpm "github.com/abtransitionit/golinux/mock/onpm"
 )
 
-// Description: upgrade the linux OS of a set of nodes
+// Description: upgrade the linux OS of a host
 //
 // Notes:
 // - a node is a remote VM, the localhost, a container or a remote container
-// - a target is a node from which the ssh command is executed
+// - a host is a node from which the ssh command is executed
 // - upgrade mean: set the OS native repositories and packages to the latest version
-func UpgradeOs(targetName string, paramList [][]any, logger logx.Logger) (bool, error) {
+func UpgradeOs(hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
 
 	// play CLI
-	_, err := lonpm.UpgradeOs(targetName, logger)
+	_, err := lonpm.UpgradeOs(hostName, logger)
 
 	// handle system error
 	if err != nil {
-		logger.Warnf("target: %s > system error > checking SSH config: %v", targetName, err)
+		logger.Warnf("host: %s > system error > upgrading OS: %v", hostName, err)
 	}
 
 	// handle success
+	return true, nil
+}
+
+// Description: check if a reboot is needed for a host
+//
+// TODO:
+// - this task should not be part of the gcore/golinux:omp package but rather gcore/golinux:node package
+//
+// Notes:
+// - a node is a remote VM, the localhost, a container or a remote container
+// - a host is a node from which the ssh command is executed
+func NeedReboot(hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
+
+	// play CLI
+	out, err := lonpm.NeedReboot(hostName, logger)
+
+	// handle system error
+	if err != nil {
+		logger.Warnf("host: %s > system error > getting reboot status: %v", hostName, err)
+	}
+
+	// handle success
+	logger.Debugf("host: %s > need reboot: %s", hostName, out)
 	return true, nil
 }

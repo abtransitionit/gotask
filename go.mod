@@ -35,6 +35,7 @@ require (
 	golang.org/x/net v0.44.0 // indirect
 	golang.org/x/sys v0.36.0 // indirect
 	golang.org/x/text v0.29.0 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
 // used in dev mode - removes by CI at tag step - simplify development when working on several inter dependant projects
