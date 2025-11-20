@@ -125,10 +125,10 @@ func WaitIsSshOnline(hostName string, paramList [][]any, logger logx.Logger) (bo
 	results := make(map[string]bool) // collector
 	var failedNodes []string         // slice of nodes that are not SSH reachable (within a delayMax)
 
-	// loop over item (node)
+	// 2 - loop over item (node)
 	for _, node := range nodeList {
 
-		// play CLI for each item - check if node is SSH reachable for the couple host/node
+		// 21 - play CLI for each item - check if node is SSH reachable for the couple host/node
 		ok, err := lnode.IsSshOnline(hostName, node, delayMax, logger)
 
 		// handle system error
