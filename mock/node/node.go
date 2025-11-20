@@ -110,10 +110,16 @@ func CheckSshAccess(hostName string, paramList [][]any, logger logx.Logger) (boo
 func WaitIsSshOnline(hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
 
 	// 1 - extract parameters
+	// 11 - node:List
 	nodeList := []string{}
 	for _, v := range paramList[0] {
 		nodeList = append(nodeList, fmt.Sprint(v)) // converts any -> string
 	}
+	// 12 - repo:folder
+	if len(paramList) < 2 || len(paramList[1]) == 0 {
+		return false, fmt.Errorf("host: %s > delay not provided in paramList", hostName)
+	}
+	delayMax := fmt.Sprint(paramList[1][0])
 
 	// define var
 	results := make(map[string]bool) // collector
@@ -123,7 +129,7 @@ func WaitIsSshOnline(hostName string, paramList [][]any, logger logx.Logger) (bo
 	for _, node := range nodeList {
 
 		// play CLI for each item - check if node is SSH reachable for the couple host/node
-		ok, err := lnode.IsSshOnline(hostName, node, logger)
+		ok, err := lnode.IsSshOnline(hostName, node, delayMax, logger)
 
 		// handle system error
 		if err != nil {
@@ -136,7 +142,7 @@ func WaitIsSshOnline(hostName string, paramList [][]any, logger logx.Logger) (bo
 		if !ok {
 			failedNodes = append(failedNodes, node)
 			// log
-			logger.Infof("host: %s > node %s: > is not SSH reachable after the delay of ", hostName, node)
+			logger.Infof("host: %s > node %s: > is not SSH reachable within the delay of %s", hostName, node, delayMax)
 		}
 	}
 
