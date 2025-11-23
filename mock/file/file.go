@@ -9,7 +9,7 @@ import (
 	lfile "github.com/abtransitionit/golinux/mock/file"
 )
 
-// func CopyFileWithSudo(hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
+// func CopyFileWithSudo(phaseName, hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
 
 // 	// 1 - extract parameters
 // 	// 11 - node:List
@@ -32,7 +32,7 @@ import (
 // 	return true, nil
 // }
 
-func CopyFileWithSudo(hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
+func CopyFileWithSudo(phaseName, hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
 
 	// 1 - extract parameters
 	// 11 - node:List
@@ -58,12 +58,12 @@ func CopyFileWithSudo(hostName string, paramList [][]any, logger logx.Logger) (b
 	// 3 - loop over item (node)
 	for _, node := range nodeList {
 		wgHost.Add(1) // Increment the WaitGroup:counter for each node
-		logger.Infof("↪ (goroutine) %s/%s > starting", hostName, node)
+		logger.Infof("↪ (%s) %s/%s > running", phaseName, hostName, node)
 		go func(oneNode string) { // create as goroutine (that will run concurrently) as node  AND pass it as an argument
 			defer wgHost.Done()                                                      // Decrement the WaitGroup counter - when the goroutine complete
 			_, grErr := lfile.CopyFileWithSudo(hostName, node, fileProperty, logger) // the goroutin execute in fact this code
 			if grErr != nil {
-				logger.Errorf("(goroutine) %s/%s > %v", hostName, oneNode, grErr) // send goroutines error if any into the chanel
+				logger.Errorf("(%) %s/%s > %v", phaseName, hostName, oneNode, grErr) // send goroutines error if any into the chanel
 				// send goroutines error if any into the chanel
 				errChNode <- fmt.Errorf("%w", grErr)
 			}

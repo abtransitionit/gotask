@@ -11,7 +11,7 @@ import (
 //
 // Notes:
 // - the host contains the git repository
-func MergeDevToMain(hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
+func MergeDevToMain(phaseName, hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
 
 	// 1 - extract parameters
 	// 11 - repo:list

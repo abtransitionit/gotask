@@ -14,7 +14,7 @@ import (
 // Notes:
 // - a node is a remote VM, the localhost, a container or a remote container
 // - a host is a node from which the ssh command is executed
-func CheckSshConf(hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
+func CheckSshConf(phaseName, hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
 
 	// 1 - extract parameters
 	nodeList := []string{}
@@ -62,7 +62,7 @@ func CheckSshConf(hostName string, paramList [][]any, logger logx.Logger) (bool,
 // Notes:
 // - a node is a remote VM, the localhost, a container or a remote container
 // - a host is a node from which the ssh command is executed
-func CheckSshAccess(hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
+func CheckSshAccess(phaseName, hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
 
 	// 1 - extract parameters
 	nodeList := []string{}
@@ -109,7 +109,7 @@ func CheckSshAccess(hostName string, paramList [][]any, logger logx.Logger) (boo
 // Notes:
 // - a node is a remote VM, the localhost, a container or a remote container
 // - a host is a node from which the ssh command is executed
-func WaitIsSshOnline(hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
+func WaitIsSshOnline(phaseName, hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
 
 	// 1 - extract parameters
 	// 11 - node:List
@@ -131,12 +131,12 @@ func WaitIsSshOnline(hostName string, paramList [][]any, logger logx.Logger) (bo
 	// 3 - loop over item (node)
 	for _, node := range nodeList {
 		wgHost.Add(1) // Increment the WaitGroup:counter for each node
-		logger.Infof("↪ (goroutine) %s/%s > starting", hostName, node)
+		logger.Infof("↪ (%s) %s/%s > running", phaseName, hostName, node)
 		go func(oneNode string) { // create as goroutine (that will run concurrently) as node  AND pass it as an argument
 			defer wgHost.Done()                                                // Decrement the WaitGroup counter - when the goroutine complete
 			_, grErr := lnode.IsSshOnline(hostName, oneNode, delayMax, logger) // the goroutin execute in fact this code
 			if grErr != nil {
-				logger.Errorf("(goroutine) %s/%s > %v", hostName, oneNode, grErr) // send goroutines error if any into the chanel
+				logger.Errorf("(%s) %s/%s > %v", phaseName, hostName, oneNode, grErr) // send goroutines error if any into the chanel
 				// send goroutines error if any into the chanel
 				errChNode <- fmt.Errorf("%w", grErr)
 			}
@@ -165,7 +165,7 @@ func WaitIsSshOnline(hostName string, paramList [][]any, logger logx.Logger) (bo
 	return true, nil
 }
 
-func RebootIfNeeded(hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
+func RebootIfNeeded(phaseName, hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
 
 	// play CLI
 	_, err := lnode.RebootIfNeeded(hostName, logger)
@@ -185,7 +185,7 @@ func RebootIfNeeded(hostName string, paramList [][]any, logger logx.Logger) (boo
 // Notes:
 // - a node is a remote VM, the localhost, a container or a remote container
 // - a host is a node from which the ssh command is executed
-// func NeedReboot(hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
+// func NeedReboot(phaseName, hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
 // 	// 1 - extract parameters
 // 	// 11 - node:List
 // 	nodeList := []string{}
@@ -201,7 +201,7 @@ func RebootIfNeeded(hostName string, paramList [][]any, logger logx.Logger) (boo
 // 	// 3 - loop over item (node)
 // 	for _, node := range nodeList {
 // 		wgHost.Add(1) // Increment the WaitGroup:counter for each node
-// 		logger.Infof("↪ (goroutine) %s/%s > starting", hostName, node)
+// 		logger.Infof("↪ (goroutine) %s/%s > running", hostName, node)
 // 		go func(oneNode string) { // create as goroutine (that will run concurrently) as node  AND pass it as an argument
 // 			defer wgHost.Done()                                                // Decrement the WaitGroup counter - when the goroutine complete
 // 			_, grErr := lnode.IsSshOnline(hostName, oneNode, delayMax, logger) // the goroutin execute in fact this code

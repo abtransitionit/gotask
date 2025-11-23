@@ -11,7 +11,7 @@ import (
 // - a node is a remote VM, the localhost, a container or a remote container
 // - a host is a node from which the ssh command is executed
 // - upgrade mean: set the OS native repositories and packages to the latest version
-func UpgradeOs(hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
+func UpgradeOs(phaseName, hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
 
 	// play CLI
 	_, err := lonpm.UpgradeOs(hostName, logger)
@@ -33,7 +33,7 @@ func UpgradeOs(hostName string, paramList [][]any, logger logx.Logger) (bool, er
 // Notes:
 // - a node is a remote VM, the localhost, a container or a remote container
 // - a host is a node from which the ssh command is executed
-func NeedReboot(hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
+func NeedReboot(phaseName, hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
 
 	// play CLI
 	out, err := lonpm.NeedReboot(hostName, logger)
