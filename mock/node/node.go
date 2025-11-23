@@ -123,10 +123,6 @@ func WaitIsSshOnline(hostName string, paramList [][]any, logger logx.Logger) (bo
 	}
 	delayMax := fmt.Sprint(paramList[1][0])
 
-	// // define var
-	// results := make(map[string]bool) // collector
-	// var failedNodes []string         // slice of nodes that are not SSH reachable (within a delayMax)
-
 	// 2 - manage goroutines concurrency
 	nbNode := len(nodeList)
 	var wgHost sync.WaitGroup             // define a WaitGroup instance for each node : wait for all (concurent) goroutines (one per node) to complete
@@ -168,6 +164,76 @@ func WaitIsSshOnline(hostName string, paramList [][]any, logger logx.Logger) (bo
 	// 6 - handle success
 	return true, nil
 }
+
+func RebootIfNeeded(hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
+
+	// play CLI
+	_, err := lnode.RebootIfNeeded(hostName, logger)
+
+	// handle system error
+	if err != nil {
+		logger.Warnf("host: %s > system error > getting reboot status: %v", hostName, err)
+	}
+
+	// handle success
+	// logger.Debugf("host: %s > need reboot: %s", hostName, out)
+	return true, nil
+}
+
+// Description: reboot a set of node if needed
+//
+// Notes:
+// - a node is a remote VM, the localhost, a container or a remote container
+// - a host is a node from which the ssh command is executed
+// func NeedReboot(hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
+// 	// 1 - extract parameters
+// 	// 11 - node:List
+// 	nodeList := []string{}
+// 	for _, v := range paramList[0] {
+// 		nodeList = append(nodeList, fmt.Sprint(v)) // converts any -> string
+// 	}
+
+// 	// 2 - manage goroutines concurrency
+// 	nbNode := len(nodeList)
+// 	var wgHost sync.WaitGroup             // define a WaitGroup instance for each node : wait for all (concurent) goroutines (one per node) to complete
+// 	errChNode := make(chan error, nbNode) // define a channel to collect errors from goroutines
+
+// 	// 3 - loop over item (node)
+// 	for _, node := range nodeList {
+// 		wgHost.Add(1) // Increment the WaitGroup:counter for each node
+// 		logger.Infof("↪ (goroutine) %s/%s > starting", hostName, node)
+// 		go func(oneNode string) { // create as goroutine (that will run concurrently) as node  AND pass it as an argument
+// 			defer wgHost.Done()                                                // Decrement the WaitGroup counter - when the goroutine complete
+// 			_, grErr := lnode.IsSshOnline(hostName, oneNode, delayMax, logger) // the goroutin execute in fact this code
+// 			if grErr != nil {
+// 				logger.Errorf("(goroutine) %s/%s > %v", hostName, oneNode, grErr) // send goroutines error if any into the chanel
+// 				// send goroutines error if any into the chanel
+// 				errChNode <- fmt.Errorf("%w", grErr)
+// 			}
+
+// 		}(node) // pass the node to the goroutine
+// 	} // node loop
+
+// 	wgHost.Wait()    // Wait for all goroutines to complete - done with the help of the WaitGroup:counter
+// 	close(errChNode) // close the channel - signal that no more error will be sent
+
+// 	// 4 - collect errors
+// 	var errList []error
+// 	for e := range errChNode {
+// 		errList = append(errList, e)
+// 	}
+
+// 	// 5 - handle errors
+// 	nbGroutineFailed := len(errList)
+// 	errCombined := errors.Join(errList...)
+// 	if nbGroutineFailed > 0 {
+// 		logger.Errorf("❌ host: %s > nb node that failed: %d", hostName, nbGroutineFailed)
+// 		return false, errCombined
+// 	}
+
+// 	// 6 - handle success
+// 	return true, nil
+// }
 
 // ------- pattern for target/host that has node in param -------
 // for _, item := range itemList {
