@@ -22,6 +22,56 @@ func CheckSshConf(phaseName, hostName string, paramList [][]any, logger logx.Log
 		nodeList = append(nodeList, fmt.Sprint(v)) // converts any -> string
 	}
 
+	// 2 - manage goroutines concurrency
+	nbNode := len(nodeList)
+	var wgHost sync.WaitGroup             // define a WaitGroup instance for each item in the list : wait for all (concurent) goroutines to complete
+	errChNode := make(chan error, nbNode) // define a channel to collect errors from each goroutine
+
+	// 3 - loop over item (node)
+	for _, node := range nodeList {
+		wgHost.Add(1) // Increment the WaitGroup:counter for this item
+		logger.Infof("↪ (%s) %s/%s > running", phaseName, hostName, node)
+		go func(oneNode string) { // create as many goroutine (that will run concurrently) as item AND pass the item as an argument
+			defer wgHost.Done()                                       // Decrement the WaitGroup counter - when the goroutine complete
+			_, grErr := lnode.IsSshConfigured(hostName, node, logger) // the code to be executed by the goroutine
+			if grErr != nil {
+				logger.Errorf("(%s) %s/%s > %v", phaseName, hostName, oneNode, grErr) // send goroutines error if any into the chanel
+				// send goroutines error if any into the chanel
+				errChNode <- fmt.Errorf("%w", grErr)
+			}
+
+		}(node) // pass the node to the goroutine
+	} // node loop
+
+	wgHost.Wait()    // Wait for all goroutines to complete - done with the help of the WaitGroup:counter
+	close(errChNode) // close the channel - signal that no more error will be sent
+
+	// 4 - collect errors
+	var errList []error
+	for e := range errChNode {
+		errList = append(errList, e)
+	}
+
+	// 5 - handle errors
+	nbGroutineFailed := len(errList)
+	errCombined := errors.Join(errList...)
+	if nbGroutineFailed > 0 {
+		logger.Errorf("❌ host: %s > nb node that failed: %d", hostName, nbGroutineFailed)
+		return false, errCombined
+	}
+
+	// 6 - handle success
+	return true, nil
+}
+
+func CheckSshConfOld(phaseName, hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
+
+	// 1 - extract parameters
+	nodeList := []string{}
+	for _, v := range paramList[0] {
+		nodeList = append(nodeList, fmt.Sprint(v)) // converts any -> string
+	}
+
 	// define var
 	results := make(map[string]bool) // collector
 	var failedNodes []string         // slice of node that are not SSH configured
@@ -70,37 +120,45 @@ func CheckSshAccess(phaseName, hostName string, paramList [][]any, logger logx.L
 		nodeList = append(nodeList, fmt.Sprint(v)) // converts any -> string
 	}
 
-	// define var
-	results := make(map[string]bool) // collector
-	var failedNodes []string         // slice of nodes that are not SSH reachable
+	// 2 - manage goroutines concurrency
+	nbNode := len(nodeList)
+	var wgHost sync.WaitGroup             // define a WaitGroup instance for each item in the list : wait for all (concurent) goroutines to complete
+	errChNode := make(chan error, nbNode) // define a channel to collect errors from each goroutine
 
-	// loop over item (node)
+	// 3 - loop over item (node)
 	for _, node := range nodeList {
+		wgHost.Add(1) // Increment the WaitGroup:counter for this item
+		logger.Infof("↪ (%s) %s/%s > running", phaseName, hostName, node)
+		go func(oneNode string) { // create as many goroutine (that will run concurrently) as item AND pass the item as an argument
+			defer wgHost.Done()                                      // Decrement the WaitGroup counter - when the goroutine complete
+			_, grErr := lnode.IsSshReachable(hostName, node, logger) // the code to be executed by the goroutine
+			if grErr != nil {
+				logger.Errorf("(%s) %s/%s > %v", phaseName, hostName, oneNode, grErr) // send goroutines error if any into the chanel
+				// send goroutines error if any into the chanel
+				errChNode <- fmt.Errorf("%w", grErr)
+			}
 
-		// play CLI for each item - check if node is SSH reachable for the couple host/node
-		ok, err := lnode.IsSshReachable(hostName, node, logger)
+		}(node) // pass the node to the goroutine
+	} // node loop
 
-		// handle system error
-		if err != nil {
-			logger.Warnf("host: %s > node %s: > system error > checking SSH access: %v", hostName, node, err)
-			continue
-		}
+	wgHost.Wait()    // Wait for all goroutines to complete - done with the help of the WaitGroup:counter
+	close(errChNode) // close the channel - signal that no more error will be sent
 
-		// manage and collect logic errors
-		results[node] = ok
-		if !ok {
-			failedNodes = append(failedNodes, node)
-			// log
-			logger.Infof("host: %s > node %s: > is not SSH reachable", hostName, node)
-		}
+	// 4 - collect errors
+	var errList []error
+	for e := range errChNode {
+		errList = append(errList, e)
 	}
 
-	// errors summary
-	if len(failedNodes) > 0 {
-		return false, fmt.Errorf("host: %s > Node(s) that are not SSH reachable: %v", hostName, failedNodes)
+	// 5 - handle errors
+	nbGroutineFailed := len(errList)
+	errCombined := errors.Join(errList...)
+	if nbGroutineFailed > 0 {
+		logger.Errorf("❌ host: %s > nb node that failed: %d", hostName, nbGroutineFailed)
+		return false, errCombined
 	}
 
-	// handle success
+	// 6 - handle success
 	return true, nil
 }
 
@@ -125,16 +183,16 @@ func WaitIsSshOnline(phaseName, hostName string, paramList [][]any, logger logx.
 
 	// 2 - manage goroutines concurrency
 	nbNode := len(nodeList)
-	var wgHost sync.WaitGroup             // define a WaitGroup instance for each node : wait for all (concurent) goroutines (one per node) to complete
-	errChNode := make(chan error, nbNode) // define a channel to collect errors from goroutines
+	var wgHost sync.WaitGroup             // define a WaitGroup instance for each item in the list : wait for all (concurent) goroutines to complete
+	errChNode := make(chan error, nbNode) // define a channel to collect errors from each goroutine
 
 	// 3 - loop over item (node)
 	for _, node := range nodeList {
 		wgHost.Add(1) // Increment the WaitGroup:counter for each node
 		logger.Infof("↪ (%s) %s/%s > running", phaseName, hostName, node)
-		go func(oneNode string) { // create as goroutine (that will run concurrently) as node  AND pass it as an argument
+		go func(oneNode string) { // create as many goroutine (that will run concurrently) as item AND pass the item as an argument
 			defer wgHost.Done()                                                // Decrement the WaitGroup counter - when the goroutine complete
-			_, grErr := lnode.IsSshOnline(hostName, oneNode, delayMax, logger) // the goroutin execute in fact this code
+			_, grErr := lnode.IsSshOnline(hostName, oneNode, delayMax, logger) // the code to be executed by the goroutine
 			if grErr != nil {
 				logger.Errorf("(%s) %s/%s > %v", phaseName, hostName, oneNode, grErr) // send goroutines error if any into the chanel
 				// send goroutines error if any into the chanel
@@ -195,16 +253,16 @@ func RebootIfNeeded(phaseName, hostName string, paramList [][]any, logger logx.L
 
 // 	// 2 - manage goroutines concurrency
 // 	nbNode := len(nodeList)
-// 	var wgHost sync.WaitGroup             // define a WaitGroup instance for each node : wait for all (concurent) goroutines (one per node) to complete
-// 	errChNode := make(chan error, nbNode) // define a channel to collect errors from goroutines
+// 	var wgHost sync.WaitGroup             // define a WaitGroup instance for each item in the list : wait for all (concurent) goroutines to complete
+// 	errChNode := make(chan error, nbNode) // define a channel to collect errors from each goroutine
 
 // 	// 3 - loop over item (node)
 // 	for _, node := range nodeList {
 // 		wgHost.Add(1) // Increment the WaitGroup:counter for each node
 // 		logger.Infof("↪ (goroutine) %s/%s > running", hostName, node)
-// 		go func(oneNode string) { // create as goroutine (that will run concurrently) as node  AND pass it as an argument
+// 		go func(oneNode string) { // create as many goroutine (that will run concurrently) as node  AND pass it as an argument
 // 			defer wgHost.Done()                                                // Decrement the WaitGroup counter - when the goroutine complete
-// 			_, grErr := lnode.IsSshOnline(hostName, oneNode, delayMax, logger) // the goroutin execute in fact this code
+// 			_, grErr := lnode.IsSshOnline(hostName, oneNode, delayMax, logger) // the code to be executed by the goroutine
 // 			if grErr != nil {
 // 				logger.Errorf("(goroutine) %s/%s > %v", hostName, oneNode, grErr) // send goroutines error if any into the chanel
 // 				// send goroutines error if any into the chanel
@@ -257,3 +315,50 @@ func RebootIfNeeded(phaseName, hostName string, paramList [][]any, logger logx.L
 // wait for all goroutines to comple --> waitgroup
 // collect errors / failures --> chanel
 // return aggregated result
+
+// Description: check if a set of node is SSH reachable from a host
+//
+// Notes:
+// - a node is a remote VM, the localhost, a container or a remote container
+// - a host is a node from which the ssh command is executed
+// func CheckSshAccessOld(phaseName, hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
+
+// 	// 1 - extract parameters
+// 	nodeList := []string{}
+// 	for _, v := range paramList[0] {
+// 		nodeList = append(nodeList, fmt.Sprint(v)) // converts any -> string
+// 	}
+
+// 	// define var
+// 	results := make(map[string]bool) // collector
+// 	var failedNodes []string         // slice of nodes that are not SSH reachable
+
+// 	// loop over item (node)
+// 	for _, node := range nodeList {
+
+// 		// play CLI for each item - check if node is SSH reachable for the couple host/node
+// 		ok, err := lnode.IsSshReachable(hostName, node, logger)
+
+// 		// handle system error
+// 		if err != nil {
+// 			logger.Warnf("host: %s > node %s: > system error > checking SSH access: %v", hostName, node, err)
+// 			continue
+// 		}
+
+// 		// manage and collect logic errors
+// 		results[node] = ok
+// 		if !ok {
+// 			failedNodes = append(failedNodes, node)
+// 			// log
+// 			logger.Infof("host: %s > node %s: > is not SSH reachable", hostName, node)
+// 		}
+// 	}
+
+// 	// errors summary
+// 	if len(failedNodes) > 0 {
+// 		return false, fmt.Errorf("host: %s > Node(s) that are not SSH reachable: %v", hostName, failedNodes)
+// 	}
+
+// 	// handle success
+// 	return true, nil
+// }
