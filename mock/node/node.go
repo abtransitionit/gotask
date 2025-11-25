@@ -29,10 +29,13 @@ func CheckSshConf(phaseName, hostName string, paramList [][]any, logger logx.Log
 
 	// 3 - loop over item (node)
 	for _, node := range nodeList {
-		wgHost.Add(1) // Increment the WaitGroup:counter for this item
-		logger.Infof("↪ (%s) %s/%s > running", phaseName, hostName, node)
+		wgHost.Add(1)             // Increment the WaitGroup:counter for this item
 		go func(oneNode string) { // create as many goroutine (that will run concurrently) as item AND pass the item as an argument
-			defer wgHost.Done()                                       // Decrement the WaitGroup counter - when the goroutine complete
+			defer func() {
+				logger.Infof("↩ (%s) %s/%s > finished", phaseName, hostName, oneNode)
+				wgHost.Done() // Decrement the WaitGroup counter - when the goroutine complete
+			}()
+			logger.Infof("↪ (%s) %s/%s > ongoing", phaseName, hostName, oneNode)
 			_, grErr := lnode.IsSshConfigured(hostName, node, logger) // the code to be executed by the goroutine
 			if grErr != nil {
 				logger.Errorf("(%s) %s/%s > %v", phaseName, hostName, oneNode, grErr) // send goroutines error if any into the chanel

@@ -1,7 +1,9 @@
 package git
 
 import (
+	"errors"
 	"fmt"
+	"sync"
 
 	"github.com/abtransitionit/gocore/logx"
 	lgit "github.com/abtransitionit/golinux/mock/git"
@@ -25,38 +27,143 @@ func MergeDevToMain(phaseName, hostName string, paramList [][]any, logger logx.L
 	}
 	repoFolder := fmt.Sprint(paramList[1][0])
 
-	// define var
-	var failed []string
-	results := make(map[string]bool)
-	// const repoFolder = "/Users/max/wkspc/git" // TODO : externalize it to config file
+	// 2 - manage goroutines concurrency
+	nbRepo := len(repoList)
+	var wgHost sync.WaitGroup             // define a WaitGroup instance for each item in the list : wait for all (concurent) goroutines to complete
+	errChRepo := make(chan error, nbRepo) // define a channel to collect errors from each goroutine
 
-	// loopt over item (git repo)
+	// 3 - loop over item (node)
 	for _, repoName := range repoList {
+		wgHost.Add(1) // Increment the WaitGroup:counter for each node
+		logger.Infof("↪ (%s) %s/%s > running", phaseName, hostName, repoName)
+		go func(oneNode string) { // create as many goroutine (that will run concurrently) as item AND pass the item as an argument
+			defer wgHost.Done()                                                     // Decrement the WaitGroup counter - when the goroutine complete
+			_, grErr := lgit.MergeDevToMain(hostName, repoFolder, repoName, logger) // the code to be executed by the goroutine
+			if grErr != nil {
+				logger.Errorf("(%s) %s/%s > %v", phaseName, hostName, oneNode, grErr) // send goroutines error if any into the chanel
+				// send goroutines error if any into the chanel
+				errChRepo <- fmt.Errorf("%w", grErr)
+			}
 
-		// play CLI for each item - merge dev to main and push
-		ok, err := lgit.MergeDevToMain(hostName, repoFolder, repoName, logger)
+		}(repoName) // pass the node to the goroutine
+	} // node loop
 
-		// handle system error
-		if err != nil {
-			logger.Warnf("host: %s > repo %s > system error during git ops: %v", hostName, repoName, err)
-			continue
-		}
+	wgHost.Wait()    // Wait for all goroutines to complete - done with the help of the WaitGroup:counter
+	close(errChRepo) // close the channel - signal that no more error will be sent
 
-		// manage and collect logic errors
-		results[repoName] = ok
-		if !ok {
-			failed = append(failed, repoName)
-			logger.Debugf("host: %s > repo %s > git op failed", hostName, repoName)
-		} else {
-			logger.Debugf("host: %s > repo %s > update with success", hostName, repoName)
-		}
+	// 4 - collect errors
+	var errList []error
+	for e := range errChRepo {
+		errList = append(errList, e)
 	}
 
-	// errors summary
-	if len(failed) > 0 {
-		return false, fmt.Errorf("host: %s > repo(s) failed: %v", hostName, failed)
+	// 5 - handle errors
+	nbGroutineFailed := len(errList)
+	errCombined := errors.Join(errList...)
+	if nbGroutineFailed > 0 {
+		logger.Errorf("❌ host: %s > nb node that failed: %d", hostName, nbGroutineFailed)
+		return false, errCombined
 	}
 
-	// handle success
+	// 6 - handle success
 	return true, nil
 }
+
+// func MergeDevToMain(phaseName, hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
+
+// 	// 1 - extract parameters
+// 	// 11 - repo:list
+// 	repoList := []string{}
+// 	for _, v := range paramList[0] {
+// 		repoList = append(repoList, fmt.Sprint(v)) // converts any -> string
+// 	}
+// 	// 12 - repo:folder
+// 	if len(paramList) < 2 || len(paramList[1]) == 0 {
+// 		return false, fmt.Errorf("host: %s > repo folder not provided in paramList", hostName)
+// 	}
+// 	repoFolder := fmt.Sprint(paramList[1][0])
+
+// 	// define var
+// 	var failed []string
+// 	results := make(map[string]bool)
+// 	// const repoFolder = "/Users/max/wkspc/git" // TODO : externalize it to config file
+
+// 	// loopt over item (git repo)
+// 	for _, repoName := range repoList {
+
+// 		// play CLI for each item - merge dev to main and push
+// 		ok, err := lgit.MergeDevToMain(hostName, repoFolder, repoName, logger)
+
+// 		// handle system error
+// 		if err != nil {
+// 			logger.Warnf("host: %s > repo %s > system error during git ops: %v", hostName, repoName, err)
+// 			continue
+// 		}
+
+// 		// manage and collect logic errors
+// 		results[repoName] = ok
+// 		if !ok {
+// 			failed = append(failed, repoName)
+// 			logger.Debugf("host: %s > repo %s > git op failed", hostName, repoName)
+// 		} else {
+// 			logger.Debugf("host: %s > repo %s > update with success", hostName, repoName)
+// 		}
+// 	}
+
+// 	// errors summary
+// 	if len(failed) > 0 {
+// 		return false, fmt.Errorf("host: %s > repo(s) failed: %v", hostName, failed)
+// 	}
+
+// 	// handle success
+// 	return true, nil
+// }
+// func MergeDevToMainOld(phaseName, hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
+
+// 	// 1 - extract parameters
+// 	// 11 - repo:list
+// 	repoList := []string{}
+// 	for _, v := range paramList[0] {
+// 		repoList = append(repoList, fmt.Sprint(v)) // converts any -> string
+// 	}
+// 	// 12 - repo:folder
+// 	if len(paramList) < 2 || len(paramList[1]) == 0 {
+// 		return false, fmt.Errorf("host: %s > repo folder not provided in paramList", hostName)
+// 	}
+// 	repoFolder := fmt.Sprint(paramList[1][0])
+
+// 	// define var
+// 	var failed []string
+// 	results := make(map[string]bool)
+// 	// const repoFolder = "/Users/max/wkspc/git" // TODO : externalize it to config file
+
+// 	// loopt over item (git repo)
+// 	for _, repoName := range repoList {
+
+// 		// play CLI for each item - merge dev to main and push
+// 		ok, err := lgit.MergeDevToMain(hostName, repoFolder, repoName, logger)
+
+// 		// handle system error
+// 		if err != nil {
+// 			logger.Warnf("host: %s > repo %s > system error during git ops: %v", hostName, repoName, err)
+// 			continue
+// 		}
+
+// 		// manage and collect logic errors
+// 		results[repoName] = ok
+// 		if !ok {
+// 			failed = append(failed, repoName)
+// 			logger.Debugf("host: %s > repo %s > git op failed", hostName, repoName)
+// 		} else {
+// 			logger.Debugf("host: %s > repo %s > update with success", hostName, repoName)
+// 		}
+// 	}
+
+// 	// errors summary
+// 	if len(failed) > 0 {
+// 		return false, fmt.Errorf("host: %s > repo(s) failed: %v", hostName, failed)
+// 	}
+
+// 	// handle success
+// 	return true, nil
+// }

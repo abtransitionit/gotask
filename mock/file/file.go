@@ -9,6 +9,7 @@ import (
 	lfile "github.com/abtransitionit/golinux/mock/file"
 )
 
+// Description: sudo copy a file to a set of nodes from hostname
 func CopyFileWithSudo(phaseName, hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
 
 	// 1 - extract parameters
@@ -21,7 +22,6 @@ func CopyFileWithSudo(phaseName, hostName string, paramList [][]any, logger logx
 	if len(paramList) < 2 || len(paramList[1]) == 0 {
 		return false, fmt.Errorf("host: %s > fileProperty not provided in paramList", hostName)
 	}
-	// 12 - fileProperty
 	fileProperty, err := lfile.GetVarStruct[lfile.FileProperty](fmt.Sprint(paramList[1][0]))
 	if err != nil {
 		logger.Errorf("%v", err)
@@ -34,10 +34,13 @@ func CopyFileWithSudo(phaseName, hostName string, paramList [][]any, logger logx
 
 	// 3 - loop over item (node)
 	for _, node := range nodeList {
-		wgHost.Add(1) // Increment the WaitGroup:counter for each node
-		logger.Infof("↪ (%s) %s/%s > running", phaseName, hostName, node)
+		wgHost.Add(1)             // Increment the WaitGroup:counter for each node
 		go func(oneNode string) { // create as many goroutine (that will run concurrently) as item AND pass the item as an argument
-			defer wgHost.Done()                                                      // Decrement the WaitGroup counter - when the goroutine complete
+			defer func() {
+				logger.Infof("↩ (%s) %s/%s > finished", phaseName, hostName, oneNode)
+				wgHost.Done() // Decrement the WaitGroup counter - when the goroutine complete
+			}()
+			logger.Infof("↪ (%s) %s/%s > ongoing", phaseName, hostName, oneNode)
 			_, grErr := lfile.CopyFileWithSudo(hostName, node, fileProperty, logger) // the code to be executed by the goroutine
 			if grErr != nil {
 				logger.Errorf("(%s) %s/%s > %v", phaseName, hostName, oneNode, grErr) // send goroutines error if any into the chanel

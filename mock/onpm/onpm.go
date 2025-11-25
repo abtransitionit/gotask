@@ -5,6 +5,28 @@ import (
 	lonpm "github.com/abtransitionit/golinux/mock/onpm"
 )
 
+// Description: updates the linux OS of a host
+//
+// Notes:
+// - a node is a remote VM, the localhost, a container or a remote container
+// - a host is a node from which the ssh command is executed
+// - update mean: add the missing/reuired standard native OS package repositories and packages
+func UpdateOs(phaseName, hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
+
+	// log
+	// play CLI
+	logger.Infof("↪ (%s) %s > ongoing", phaseName, hostName)
+	_, err := lonpm.UpdateOs(hostName, logger)
+
+	// handle system error
+	if err != nil {
+		logger.Warnf("host: %s > system error > updating OS: %v", hostName, err)
+	}
+
+	// handle success
+	return true, nil
+}
+
 // Description: upgrade the linux OS of a host
 //
 // Notes:
@@ -12,6 +34,7 @@ import (
 // - a host is a node from which the ssh command is executed
 // - upgrade mean: set the OS native repositories and packages to the latest version
 func UpgradeOs(phaseName, hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
+	// log
 
 	// play CLI
 	_, err := lonpm.UpgradeOs(hostName, logger)
@@ -36,6 +59,7 @@ func UpgradeOs(phaseName, hostName string, paramList [][]any, logger logx.Logger
 func NeedReboot(phaseName, hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
 
 	// play CLI
+	logger.Infof("↪ (%s) %s > ongoing", phaseName, hostName)
 	out, err := lonpm.NeedReboot(hostName, logger)
 
 	// handle system error
