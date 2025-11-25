@@ -36,11 +36,15 @@ func MergeDevToMain(phaseName, hostName string, paramList [][]any, logger logx.L
 	for _, repoName := range repoList {
 		wgHost.Add(1) // Increment the WaitGroup:counter for each node
 		logger.Infof("↪ (%s) %s/%s > running", phaseName, hostName, repoName)
-		go func(oneNode string) { // create as many goroutine (that will run concurrently) as item AND pass the item as an argument
-			defer wgHost.Done()                                                     // Decrement the WaitGroup counter - when the goroutine complete
+		go func(oneRepo string) { // create as many goroutine (that will run concurrently) as item AND pass the item as an argument
+			defer func() {
+				logger.Infof("↩ (%s) %s/%s > finished", phaseName, hostName, oneRepo)
+				wgHost.Done() // Decrement the WaitGroup counter - when the goroutine complete
+			}()
+			// defer wgHost.Done()                                                     // Decrement the WaitGroup counter - when the goroutine complete
 			_, grErr := lgit.MergeDevToMain(hostName, repoFolder, repoName, logger) // the code to be executed by the goroutine
 			if grErr != nil {
-				logger.Errorf("(%s) %s/%s > %v", phaseName, hostName, oneNode, grErr) // send goroutines error if any into the chanel
+				logger.Errorf("(%s) %s/%s > %v", phaseName, hostName, oneRepo, grErr) // send goroutines error if any into the chanel
 				// send goroutines error if any into the chanel
 				errChRepo <- fmt.Errorf("%w", grErr)
 			}
