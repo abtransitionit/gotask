@@ -15,7 +15,6 @@ func UpdateOs(phaseName, hostName string, paramList [][]any, logger logx.Logger)
 
 	// log
 	// play CLI
-	logger.Infof("↪ (%s) %s > ongoing", phaseName, hostName)
 	_, err := lonpm.UpdateOs(hostName, logger)
 
 	// handle system error
@@ -59,7 +58,6 @@ func UpgradeOs(phaseName, hostName string, paramList [][]any, logger logx.Logger
 func NeedReboot(phaseName, hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
 
 	// play CLI
-	logger.Infof("↪ (%s) %s > ongoing", phaseName, hostName)
 	out, err := lonpm.NeedReboot(hostName, logger)
 
 	// handle system error

@@ -28,36 +28,36 @@ func MergeDevToMain(phaseName, hostName string, paramList [][]any, logger logx.L
 	repoFolder := fmt.Sprint(paramList[1][0])
 
 	// 2 - manage goroutines concurrency
-	nbRepo := len(repoList)
+	nbItem := len(repoList)
 	var wgHost sync.WaitGroup             // define a WaitGroup instance for each item in the list : wait for all (concurent) goroutines to complete
-	errChRepo := make(chan error, nbRepo) // define a channel to collect errors from each goroutine
+	errChItem := make(chan error, nbItem) // define a channel to collect errors from each goroutine
 
 	// 3 - loop over item (node)
 	for _, repoName := range repoList {
 		wgHost.Add(1) // Increment the WaitGroup:counter for each node
 		logger.Infof("↪ (%s) %s/%s > running", phaseName, hostName, repoName)
-		go func(oneRepo string) { // create as many goroutine (that will run concurrently) as item AND pass the item as an argument
+		go func(oneItem string) { // create as many goroutine (that will run concurrently) as item AND pass the item as an argument
 			defer func() {
-				logger.Infof("↩ (%s) %s/%s > finished", phaseName, hostName, oneRepo)
+				logger.Infof("↩ (%s) %s/%s > finished", phaseName, hostName, oneItem)
 				wgHost.Done() // Decrement the WaitGroup counter - when the goroutine complete
 			}()
 			// defer wgHost.Done()                                                     // Decrement the WaitGroup counter - when the goroutine complete
 			_, grErr := lgit.MergeDevToMain(hostName, repoFolder, repoName, logger) // the code to be executed by the goroutine
 			if grErr != nil {
-				logger.Errorf("(%s) %s/%s > %v", phaseName, hostName, oneRepo, grErr) // send goroutines error if any into the chanel
+				logger.Errorf("(%s) %s/%s > %v", phaseName, hostName, oneItem, grErr) // send goroutines error if any into the chanel
 				// send goroutines error if any into the chanel
-				errChRepo <- fmt.Errorf("%w", grErr)
+				errChItem <- fmt.Errorf("%w", grErr)
 			}
 
 		}(repoName) // pass the node to the goroutine
 	} // node loop
 
 	wgHost.Wait()    // Wait for all goroutines to complete - done with the help of the WaitGroup:counter
-	close(errChRepo) // close the channel - signal that no more error will be sent
+	close(errChItem) // close the channel - signal that no more error will be sent
 
 	// 4 - collect errors
 	var errList []error
-	for e := range errChRepo {
+	for e := range errChItem {
 		errList = append(errList, e)
 	}
 

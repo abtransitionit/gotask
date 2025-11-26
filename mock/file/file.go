@@ -28,22 +28,22 @@ func CopyFileWithSudo(phaseName, hostName string, paramList [][]any, logger logx
 	}
 
 	// 2 - manage goroutines concurrency
-	nbNode := len(nodeList)
+	nbItem := len(nodeList)
 	var wgHost sync.WaitGroup             // define a WaitGroup instance for each item in the list : wait for all (concurent) goroutines to complete
-	errChNode := make(chan error, nbNode) // define a channel to collect errors from each goroutine
+	errChNode := make(chan error, nbItem) // define a channel to collect errors from each goroutine
 
 	// 3 - loop over item (node)
 	for _, node := range nodeList {
 		wgHost.Add(1)             // Increment the WaitGroup:counter for each node
-		go func(oneNode string) { // create as many goroutine (that will run concurrently) as item AND pass the item as an argument
+		go func(oneItem string) { // create as many goroutine (that will run concurrently) as item AND pass the item as an argument
 			defer func() {
-				logger.Infof("↩ (%s) %s/%s > finished", phaseName, hostName, oneNode)
+				logger.Infof("↩ (%s) %s/%s > finished", phaseName, hostName, oneItem)
 				wgHost.Done() // Decrement the WaitGroup counter - when the goroutine complete
 			}()
-			logger.Infof("↪ (%s) %s/%s > ongoing", phaseName, hostName, oneNode)
+			logger.Infof("↪ (%s) %s/%s > ongoing", phaseName, hostName, oneItem)
 			_, grErr := lfile.CopyFileWithSudo(hostName, node, fileProperty, logger) // the code to be executed by the goroutine
 			if grErr != nil {
-				logger.Errorf("(%s) %s/%s > %v", phaseName, hostName, oneNode, grErr) // send goroutines error if any into the chanel
+				logger.Errorf("(%s) %s/%s > %v", phaseName, hostName, oneItem, grErr) // send goroutines error if any into the chanel
 				// send goroutines error if any into the chanel
 				errChNode <- fmt.Errorf("%w", grErr)
 			}
