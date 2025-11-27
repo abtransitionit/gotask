@@ -16,7 +16,7 @@ import (
 // - a host is a node from which the ssh command is executed
 func CheckSshConf(phaseName, hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
 
-	// 1 - extract parameters
+	// 1 - get parameters
 	nodeList := []string{}
 	for _, v := range paramList[0] {
 		nodeList = append(nodeList, fmt.Sprint(v)) // converts any -> string
@@ -69,7 +69,7 @@ func CheckSshConf(phaseName, hostName string, paramList [][]any, logger logx.Log
 
 func CheckSshConfOld(phaseName, hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
 
-	// 1 - extract parameters
+	// 1 - get parameters
 	nodeList := []string{}
 	for _, v := range paramList[0] {
 		nodeList = append(nodeList, fmt.Sprint(v)) // converts any -> string
@@ -117,7 +117,7 @@ func CheckSshConfOld(phaseName, hostName string, paramList [][]any, logger logx.
 // - a host is a node from which the ssh command is executed
 func CheckSshAccess(phaseName, hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
 
-	// 1 - extract parameters
+	// 1 - get parameters
 	nodeList := []string{}
 	for _, v := range paramList[0] {
 		nodeList = append(nodeList, fmt.Sprint(v)) // converts any -> string
@@ -172,7 +172,7 @@ func CheckSshAccess(phaseName, hostName string, paramList [][]any, logger logx.L
 // - a host is a node from which the ssh command is executed
 func WaitIsSshOnline(phaseName, hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
 
-	// 1 - extract parameters
+	// 1 - get parameters
 	// 11 - node:List
 	nodeList := []string{}
 	for _, v := range paramList[0] {
@@ -247,7 +247,7 @@ func RebootIfNeeded(phaseName, hostName string, paramList [][]any, logger logx.L
 }
 
 // func NeedReboot(phaseName, hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
-// 	// 1 - extract parameters
+// 	// 1 - get parameters
 // 	// 11 - node:List
 // 	nodeList := []string{}
 // 	for _, v := range paramList[0] {
@@ -326,7 +326,7 @@ func RebootIfNeeded(phaseName, hostName string, paramList [][]any, logger logx.L
 // - a host is a node from which the ssh command is executed
 // func CheckSshAccessOld(phaseName, hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
 
-// 	// 1 - extract parameters
+// 	// 1 - get parameters
 // 	nodeList := []string{}
 // 	for _, v := range paramList[0] {
 // 		nodeList = append(nodeList, fmt.Sprint(v)) // converts any -> string

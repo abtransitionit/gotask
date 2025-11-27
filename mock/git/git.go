@@ -15,7 +15,7 @@ import (
 // - the host contains the git repository
 func MergeDevToMain(phaseName, hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
 
-	// 1 - extract parameters
+	// 1 - get parameters
 	// 11 - repo:list
 	repoList := []string{}
 	for _, v := range paramList[0] {
@@ -75,7 +75,7 @@ func MergeDevToMain(phaseName, hostName string, paramList [][]any, logger logx.L
 
 // func MergeDevToMain(phaseName, hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
 
-// 	// 1 - extract parameters
+// 	// 1 - get parameters
 // 	// 11 - repo:list
 // 	repoList := []string{}
 // 	for _, v := range paramList[0] {
@@ -124,7 +124,7 @@ func MergeDevToMain(phaseName, hostName string, paramList [][]any, logger logx.L
 // }
 // func MergeDevToMainOld(phaseName, hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
 
-// 	// 1 - extract parameters
+// 	// 1 - get parameters
 // 	// 11 - repo:list
 // 	repoList := []string{}
 // 	for _, v := range paramList[0] {

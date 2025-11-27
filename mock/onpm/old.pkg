@@ -11,18 +11,18 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// Description: add native os package repositories to a set of node
+// Description: add native os packages to a host
 //
 // Notes:
 // - a node is a remote VM, the localhost, a container or a remote container
 // - a host is a node from which the ssh command is executed
-func AddRepo(phaseName, hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
+func AddPkg(phaseName, hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
 
 	// logger.Debugf("paramList: %v", paramList)
-	// 1 - extract parameters
-	// 11 - repository:list
+	// 1 - get parameters
+	// 11 - package:list
 	if len(paramList) < 1 || len(paramList[0]) == 0 {
-		return false, fmt.Errorf("host: %s > list of repo not provided in paramList", hostName)
+		return false, fmt.Errorf("host: %s > list of package not provided in paramList", hostName)
 	}
 	raw := paramList[0]
 
@@ -30,26 +30,26 @@ func AddRepo(phaseName, hostName string, paramList [][]any, logger logx.Logger) 
 	if err != nil {
 		return false, err
 	}
-	repoList, err := lfile.GetVarStruct[lonpm.RepoSlice](fmt.Sprint(string(b)))
+	pkgList, err := lfile.GetVarStruct[lonpm.PkgSlice](fmt.Sprint(string(b)))
 	if err != nil {
 		logger.Errorf("%v", err)
 	}
 
 	// 2 - manage goroutines concurrency
-	nbItem := len(repoList)
+	nbItem := len(pkgList)
 	var wgHost sync.WaitGroup             // define a WaitGroup instance for each item in the list : wait for all (concurent) goroutines to complete
 	errChItem := make(chan error, nbItem) // define a channel to collect errors from each goroutine
 
-	// 3 - loop over item
-	for _, item := range repoList {
-		wgHost.Add(1)                  // Increment the WaitGroup:counter for this item
-		go func(oneItem lonpm.Repo2) { // create as many goroutine (that will run concurrently) as item AND pass the item as an argument
+	// 3 - loop over item (node)
+	for _, item := range pkgList {
+		wgHost.Add(1)                 // Increment the WaitGroup:counter for this item
+		go func(oneItem lonpm.Pkg2) { // create as many goroutine (that will run concurrently) as item AND pass the item as an argument
 			defer func() {
-				logger.Infof("↩ (%s) %s/%s > finished", phaseName, hostName, oneItem.Name)
+				logger.Infof("↩ %s %s/%s > finished", phaseName, hostName, oneItem.Name)
 				wgHost.Done() // Decrement the WaitGroup counter - when the goroutine complete
 			}()
 			logger.Infof("↪ (%s) %s/%s > running", phaseName, hostName, oneItem.Name)
-			_, grErr := lonpm.AddRepo(hostName, oneItem, logger) // the code to be executed by the goroutine
+			_, grErr := lonpm.AddPkg(hostName, oneItem, logger) // the code to be executed by the goroutine
 			if grErr != nil {
 				logger.Errorf("(%s) %s/%s > %v", phaseName, hostName, oneItem, grErr) // send goroutines error if any into the chanel
 				// send goroutines error if any into the chanel

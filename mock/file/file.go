@@ -12,7 +12,7 @@ import (
 // Description: sudo copy a file to a set of nodes from hostname
 func CopyFileWithSudo(phaseName, hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
 
-	// 1 - extract parameters
+	// 1 - get parameters
 	// 11 - node:List
 	nodeList := []string{}
 	for _, v := range paramList[0] {

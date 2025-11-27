@@ -3,7 +3,6 @@ package onpm
 import (
 	"errors"
 	"fmt"
-	"sync"
 
 	"github.com/abtransitionit/gocore/logx"
 	lfile "github.com/abtransitionit/golinux/mock/file"
@@ -19,10 +18,10 @@ import (
 func AddPkg(phaseName, hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
 
 	// logger.Debugf("paramList: %v", paramList)
-	// 1 - extract parameters
+	// 1 - get parameters
 	// 11 - package:list
 	if len(paramList) < 1 || len(paramList[0]) == 0 {
-		return false, fmt.Errorf("host: %s > list of package not provided in paramList", hostName)
+		return false, fmt.Errorf("%s > list of package not provided in paramList", hostName)
 	}
 	raw := paramList[0]
 
@@ -37,29 +36,18 @@ func AddPkg(phaseName, hostName string, paramList [][]any, logger logx.Logger) (
 
 	// 2 - manage goroutines concurrency
 	nbItem := len(pkgList)
-	var wgHost sync.WaitGroup             // define a WaitGroup instance for each item in the list : wait for all (concurent) goroutines to complete
 	errChItem := make(chan error, nbItem) // define a channel to collect errors from each goroutine
 
-	// 3 - loop over item (node)
+	// 3 - loop over item
 	for _, item := range pkgList {
-		wgHost.Add(1)                 // Increment the WaitGroup:counter for this item
-		go func(oneItem lonpm.Pkg2) { // create as many goroutine (that will run concurrently) as item AND pass the item as an argument
-			defer func() {
-				logger.Infof("↩ %s %s/%s > finished", phaseName, hostName, oneItem.Name)
-				wgHost.Done() // Decrement the WaitGroup counter - when the goroutine complete
-			}()
-			logger.Infof("↪ (%s) %s/%s > running", phaseName, hostName, oneItem.Name)
-			_, grErr := lonpm.AddPkg(hostName, oneItem, logger) // the code to be executed by the goroutine
-			if grErr != nil {
-				logger.Errorf("(%s) %s/%s > %v", phaseName, hostName, oneItem, grErr) // send goroutines error if any into the chanel
-				// send goroutines error if any into the chanel
-				errChItem <- fmt.Errorf("%w", grErr)
-			}
-
-		}(item) // pass the item to the goroutine
+		_, grErr := lonpm.AddPkg(hostName, item, logger) // the code to be executed
+		if grErr != nil {
+			logger.Errorf("(%s) %s/%s > %v", phaseName, hostName, item, grErr) // send goroutines error if any into the chanel
+			// send error if any into the chanel
+			errChItem <- fmt.Errorf("%w", grErr)
+		}
 	} // loop
 
-	wgHost.Wait()    // Wait for all goroutines to complete - done with the help of the WaitGroup:counter
 	close(errChItem) // close the channel - signal that no more error will be sent
 
 	// 4 - collect errors
@@ -72,7 +60,7 @@ func AddPkg(phaseName, hostName string, paramList [][]any, logger logx.Logger) (
 	nbGroutineFailed := len(errList)
 	errCombined := errors.Join(errList...)
 	if nbGroutineFailed > 0 {
-		logger.Errorf("❌ host: %s > nb node that failed: %d", hostName, nbGroutineFailed)
+		logger.Errorf("❌ %s > nb pkg that failed: %d", hostName, nbGroutineFailed)
 		return false, errCombined
 	}
 
