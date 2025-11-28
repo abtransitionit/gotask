@@ -10,7 +10,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// Description: add native os package repositories to a host
+// Description: add native os package repositories to a Linux host
 //
 // Notes:
 // - a node is a remote VM, the localhost, a container or a remote container
@@ -34,7 +34,7 @@ func AddRepo(phaseName, hostName string, paramList [][]any, logger logx.Logger) 
 		logger.Errorf("%v", err)
 	}
 
-	// 2 - manage goroutines concurrency
+	// 2 - manage error reporting
 	nbItem := len(repoList)
 	errChItem := make(chan error, nbItem) // define a channel to collect errors from each goroutine
 
