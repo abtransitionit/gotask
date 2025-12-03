@@ -34,7 +34,7 @@ func CopyFileWithSudo(phaseName, hostName string, paramList [][]any, logger logx
 
 	// 3 - loop over item (node)
 	for _, node := range nodeList {
-		wgHost.Add(1)             // Increment the WaitGroup:counter for each node
+		wgHost.Add(1)             // Increment the WaitGroup:counter for each item
 		go func(oneItem string) { // create as many goroutine (that will run concurrently) as item AND pass the item as an argument
 			defer func() {
 				logger.Infof("↩ (%s) %s/%s > finished", phaseName, hostName, oneItem)

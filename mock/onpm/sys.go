@@ -33,7 +33,6 @@ func UpdateOs(phaseName, hostName string, paramList [][]any, logger logx.Logger)
 // - a host is a node from which the ssh command is executed
 // - upgrade mean: set the OS native repositories and packages to the latest version
 func UpgradeOs(phaseName, hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
-	// log
 
 	// play CLI
 	_, err := lonpm.UpgradeOs(hostName, logger)

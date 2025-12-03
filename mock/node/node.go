@@ -191,7 +191,7 @@ func WaitIsSshOnline(phaseName, hostName string, paramList [][]any, logger logx.
 
 	// 3 - loop over item (node)
 	for _, node := range nodeList {
-		wgHost.Add(1) // Increment the WaitGroup:counter for each node
+		wgHost.Add(1) // Increment the WaitGroup:counter for each item
 		logger.Infof("↪ (%s) %s/%s > running", phaseName, hostName, node)
 		go func(oneItem string) { // create as many goroutine (that will run concurrently) as item AND pass the item as an argument
 			defer wgHost.Done()                                                // Decrement the WaitGroup counter - when the goroutine complete

@@ -34,7 +34,7 @@ func MergeDevToMain(phaseName, hostName string, paramList [][]any, logger logx.L
 
 	// 3 - loop over item (node)
 	for _, repoName := range repoList {
-		wgHost.Add(1) // Increment the WaitGroup:counter for each node
+		wgHost.Add(1) // Increment the WaitGroup:counter for each item
 		logger.Infof("↪ (%s) %s/%s > running", phaseName, hostName, repoName)
 		go func(oneItem string) { // create as many goroutine (that will run concurrently) as item AND pass the item as an argument
 			defer func() {

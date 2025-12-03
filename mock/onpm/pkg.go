@@ -16,7 +16,6 @@ import (
 // - a node is a remote VM, the localhost, a container or a remote container
 // - a host is a node from which the ssh command is executed
 func AddPkg(phaseName, hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
-
 	// logger.Debugf("paramList: %v", paramList)
 	// 1 - get parameters
 	// 11 - package:list
@@ -40,7 +39,7 @@ func AddPkg(phaseName, hostName string, paramList [][]any, logger logx.Logger) (
 
 	// 3 - loop over item
 	for _, item := range pkgList {
-		_, grErr := lonpm.AddPkg(hostName, item, logger) // the code to be executed
+		_, grErr := lonpm.AddPkg(hostName, item.Name, logger) // the code to be executed
 		if grErr != nil {
 			logger.Errorf("(%s) %s/%s > %v", phaseName, hostName, item, grErr) // send goroutines error if any into the chanel
 			// send error if any into the chanel
