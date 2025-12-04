@@ -22,26 +22,15 @@ func InstallVpsImage(phaseName, hostName string, paramList [][]any, logger logx.
 	logger.Infof("Processing VPS: %s", hostName)
 
 	// 2 - get the VPS id
-	// jsonResponse, err := ovh.VpsReinstallHelper(ctx, logger, id)
-	jsonResponse, err := ovh.VpsReinstallHelper(ctx, logger, hostName)
+	jsonResponse, err := ovh.VpsReinstall(ctx, logger, hostName)
 	if err != nil {
-		// logger.Errorf("failed to re-install VPS: %v", err)
-		return false, fmt.Errorf("❌ re-installing VPS OS image: %w", err)
+		return false, fmt.Errorf("%s > re-installing VPS OS image >  %w", hostName, err)
 	}
 
 	// 3 - print the response of the request
 	jsonx.PrettyPrintColor(jsonResponse)
 
-	// play CLI
-	// out, err := ovh.InstallVpsImage(ctx, hostName, logger)
-
-	// handle system error
-	// if err != nil {
-	// 	logger.Warnf("%s > system error > updating OS image: %v", hostName, err)
-	// }
-
 	// handle success
-	// logger.Debugf("%s > rebooting: %s", hostName, out)
 	return true, nil
 }
 
