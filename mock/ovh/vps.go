@@ -12,17 +12,14 @@ import (
 // Description: re-install the same OS image on a Linux host
 //
 // Notes:
-// - the linux host is a remote VM on OVH cloud (aka. VPS)
+// - a linux host is a remote VM on OVH cloud (aka. VPS)
 func InstallVpsImage(phaseName, hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
 
 	// 1 - define var
 	ctx := context.Background()
 
-	// log
-	logger.Infof("Processing VPS: %s", hostName)
-
-	// 2 - get the VPS id
-	jsonResponse, err := ovh.VpsReinstall(ctx, logger, hostName)
+	// 2 - do the job
+	jsonResponse, err := ovh.VpsReinstall(ctx, hostName, logger)
 	if err != nil {
 		return false, fmt.Errorf("%s > re-installing VPS OS image >  %w", hostName, err)
 	}
