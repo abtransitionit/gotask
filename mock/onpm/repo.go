@@ -11,10 +11,6 @@ import (
 )
 
 // Description: add native os package repositories to a Linux host
-//
-// Notes:
-// - a node is a remote VM, the localhost, a container or a remote container
-// - a host is a node from which the ssh command is executed
 func AddRepo(phaseName, hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
 
 	// logger.Debugf("paramList: %v", paramList)

@@ -8,8 +8,6 @@ import (
 // Description: updates the linux OS of a host
 //
 // Notes:
-// - a node is a remote VM, the localhost, a container or a remote container
-// - a host is a node from which the ssh command is executed
 // - update mean: add the missing/reuired standard native OS package repositories and packages
 func UpdateOs(phaseName, hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
 
@@ -29,8 +27,6 @@ func UpdateOs(phaseName, hostName string, paramList [][]any, logger logx.Logger)
 // Description: upgrade the linux OS of a host
 //
 // Notes:
-// - a node is a remote VM, the localhost, a container or a remote container
-// - a host is a node from which the ssh command is executed
 // - upgrade mean: set the OS native repositories and packages to the latest version
 func UpgradeOs(phaseName, hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
 
@@ -50,10 +46,6 @@ func UpgradeOs(phaseName, hostName string, paramList [][]any, logger logx.Logger
 //
 // TODO:
 // - this task should not be part of the gcore/golinux:omp package but rather gcore/golinux:node package
-//
-// Notes:
-// - a node is a remote VM, the localhost, a container or a remote container
-// - a host is a node from which the ssh command is executed
 func NeedReboot(phaseName, hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
 
 	// play CLI
