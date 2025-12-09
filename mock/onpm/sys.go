@@ -17,7 +17,7 @@ func UpdateOs(phaseName, hostName string, paramList [][]any, logger logx.Logger)
 
 	// handle system error
 	if err != nil {
-		logger.Warnf("host: %s > system error > updating OS: %v", hostName, err)
+		logger.Warnf("host: %s > system error > updating OS > %v", hostName, err)
 	}
 
 	// handle success
