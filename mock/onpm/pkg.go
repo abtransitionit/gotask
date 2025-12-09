@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/abtransitionit/gocore/logx"
-	lfile "github.com/abtransitionit/golinux/mock/file"
+	"github.com/abtransitionit/gocore/mock/filex"
 	lonpm "github.com/abtransitionit/golinux/mock/onpm"
 	"gopkg.in/yaml.v3"
 )
@@ -24,7 +24,7 @@ func AddPkg(phaseName, hostName string, paramList [][]any, logger logx.Logger) (
 	if err != nil {
 		return false, err
 	}
-	pkgList, err := lfile.GetVarStruct[lonpm.PkgSlice](fmt.Sprint(string(b)))
+	pkgList, err := filex.GetVarStruct[lonpm.PkgSlice](fmt.Sprint(string(b)))
 	if err != nil {
 		logger.Errorf("%v", err)
 	}
@@ -37,7 +37,7 @@ func AddPkg(phaseName, hostName string, paramList [][]any, logger logx.Logger) (
 	for _, item := range pkgList {
 		_, grErr := lonpm.AddPkg(hostName, item.Name, logger) // the code to be executed
 		if grErr != nil {
-			logger.Errorf("(%s) %s/%s > %v", phaseName, hostName, item, grErr) // send goroutines error if any into the chanel
+			logger.Errorf("%s:%s (%s) > %v", hostName, item.Name, phaseName, grErr) // send goroutines error if any into the chanel
 			// send error if any into the chanel
 			errChItem <- fmt.Errorf("%w", grErr)
 		}

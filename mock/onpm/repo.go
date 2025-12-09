@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/abtransitionit/gocore/logx"
-	lfile "github.com/abtransitionit/golinux/mock/file"
+	"github.com/abtransitionit/gocore/mock/filex"
 	lonpm "github.com/abtransitionit/golinux/mock/onpm"
 	"gopkg.in/yaml.v3"
 )
@@ -13,7 +13,6 @@ import (
 // Description: add native os package repositories to a Linux host
 func AddRepo(phaseName, hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
 
-	// logger.Debugf("paramList: %v", paramList)
 	// 1 - get parameters
 	// 11 - repository:list
 	if len(paramList) < 1 || len(paramList[0]) == 0 {
@@ -25,7 +24,7 @@ func AddRepo(phaseName, hostName string, paramList [][]any, logger logx.Logger) 
 	if err != nil {
 		return false, err
 	}
-	repoList, err := lfile.GetVarStruct[lonpm.RepoSlice](fmt.Sprint(string(b)))
+	repoList, err := filex.GetVarStruct[lonpm.RepoSlice](fmt.Sprint(string(b)))
 	if err != nil {
 		logger.Errorf("%v", err)
 	}
