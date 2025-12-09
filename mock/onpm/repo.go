@@ -14,13 +14,12 @@ import (
 func AddRepo(phaseName, hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
 
 	// 1 - get parameters
-	// 11 - repository:list
+	// 11 - check
 	if len(paramList) < 1 || len(paramList[0]) == 0 {
 		return false, fmt.Errorf("%s > list of repo not provided in paramList", hostName)
 	}
-	raw := paramList[0]
-
-	b, err := yaml.Marshal(raw)
+	// 12 - get repository:list
+	b, err := yaml.Marshal(paramList[0])
 	if err != nil {
 		return false, err
 	}
@@ -29,17 +28,17 @@ func AddRepo(phaseName, hostName string, paramList [][]any, logger logx.Logger) 
 		logger.Errorf("%v", err)
 	}
 
-	// 2 - manage error reporting
+	// 2 - create a channel that will collect errors for each item to be managed
 	nbItem := len(repoList)
 	errChItem := make(chan error, nbItem) // define a channel to collect errors from each goroutine
 
 	// 3 - loop over item
 	for _, item := range repoList {
-		_, grErr := lonpm.AddRepo(hostName, item, logger) // the code to be executed
-		if grErr != nil {
-			logger.Errorf("(%s) %s/%s > %v", phaseName, hostName, item.Name, grErr) // send goroutines error if any into the chanel
+		_, err := lonpm.AddRepo(hostName, item, logger) // the code to be executed
+		if err != nil {
+			logger.Errorf("(%s) %s:%s > %v", phaseName, hostName, item.Name, err) // send goroutines error if any into the chanel
 			// send error if any into the chanel
-			errChItem <- fmt.Errorf("%w", grErr)
+			errChItem <- fmt.Errorf("%w", err)
 		}
 	} // loop
 	close(errChItem) // close the channel - signal that no more error will be sent
