@@ -40,13 +40,13 @@ func configureSelinuxOnSingleVm(ctx context.Context, logger logx.Logger, vmName 
 	// here: osFamily == "rhel" || "fedora"
 	logger.Debugf("%s:%s    🅐 Selinux status before is : %s / %s", vmName, osFamily, selinuxStatus, selinuxMode)
 	// logger.Debugf("%s:%s 🅐 configuring Selinux at startup and runtime", vmName, osFamily)
-	cli := selinux.ConfSelinuxAtRuntime()
+	cli := selinux.ConfigureSelinuxAtRuntime()
 	_, err = run.RunCliSsh(vmName, cli)
 	if err != nil {
 		return "", fmt.Errorf("failed to play cli %s on vm '%s': %w", cli, vmName, err)
 	}
 
-	cli = selinux.ConfSelinuxAtStartup()
+	cli = selinux.ConfigureSelinuxAtStartup()
 	_, err = run.RunCliSsh(vmName, cli)
 	if err != nil {
 		return "", fmt.Errorf("%s:%s  failed to play cli %s : %w", vmName, osFamily, cli, err)

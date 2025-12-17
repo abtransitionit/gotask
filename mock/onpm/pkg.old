@@ -30,7 +30,7 @@ func AddPkg(phaseName, hostName string, paramList [][]any, logger logx.Logger) (
 	if err != nil {
 		return false, err
 	}
-	pkgList, err := lfile.GetVarStruct[lonpm.PkgSlice](fmt.Sprint(string(b)))
+	pkgList, err := lfile.GetVarStructFromYamlString[lonpm.PkgSlice](fmt.Sprint(string(b)))
 	if err != nil {
 		logger.Errorf("%v", err)
 	}

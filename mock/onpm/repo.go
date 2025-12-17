@@ -23,7 +23,7 @@ func AddRepo(phaseName, hostName string, paramList [][]any, logger logx.Logger) 
 	if err != nil {
 		return false, err
 	}
-	repoList, err := filex.GetVarStruct[lonpm.RepoSlice](fmt.Sprint(string(b)))
+	repoList, err := filex.GetVarStructFromYamlString[lonpm.RepoSlice](fmt.Sprint(string(b)))
 	if err != nil {
 		logger.Errorf("%v", err)
 	}
@@ -41,15 +41,16 @@ func AddRepo(phaseName, hostName string, paramList [][]any, logger logx.Logger) 
 			errChItem <- fmt.Errorf("%w", err)
 		}
 	} // loop
-	close(errChItem) // close the channel - signal that no more error will be sent
 
-	// 4 - collect errors
+	// 4 - manage error
+	close(errChItem) // close the channel - signal that no more error will be sent
+	// 41 - collect errors
 	var errList []error
 	for e := range errChItem {
 		errList = append(errList, e)
 	}
 
-	// 5 - handle errors
+	// 42 - handle errors
 	nbGroutineFailed := len(errList)
 	errCombined := errors.Join(errList...)
 	if nbGroutineFailed > 0 {

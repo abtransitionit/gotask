@@ -24,7 +24,7 @@ func AddPkg(phaseName, hostName string, paramList [][]any, logger logx.Logger) (
 	if err != nil {
 		return false, err
 	}
-	pkgList, err := filex.GetVarStruct[lonpm.PkgSlice](fmt.Sprint(string(b)))
+	pkgList, err := filex.GetVarStructFromYamlString[lonpm.PkgSlice](fmt.Sprint(string(b)))
 	if err != nil {
 		logger.Errorf("%v", err)
 	}
@@ -43,15 +43,15 @@ func AddPkg(phaseName, hostName string, paramList [][]any, logger logx.Logger) (
 		}
 	} // loop
 
+	// 4 - manage error
 	close(errChItem) // close the channel - signal that no more error will be sent
-
-	// 4 - collect errors
+	// 41 - collect errors
 	var errList []error
 	for e := range errChItem {
 		errList = append(errList, e)
 	}
 
-	// 5 - handle errors
+	// 42 - handle errors
 	nbGroutineFailed := len(errList)
 	errCombined := errors.Join(errList...)
 	if nbGroutineFailed > 0 {

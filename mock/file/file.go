@@ -23,7 +23,7 @@ func CopyFileWithSudo(phaseName, hostName string, paramList [][]any, logger logx
 	if len(paramList) < 2 || len(paramList[1]) == 0 {
 		return false, fmt.Errorf("host: %s > fileProperty not provided in paramList", hostName)
 	}
-	fileProperty, err := filex.GetVarStruct[lfile.FileProperty](fmt.Sprint(paramList[1][0]))
+	fileProperty, err := filex.GetVarStructFromYamlString[lfile.FileProperty](fmt.Sprint(paramList[1][0]))
 	if err != nil {
 		logger.Errorf("%v", err)
 	}
