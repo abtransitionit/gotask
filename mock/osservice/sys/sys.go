@@ -29,7 +29,7 @@ func Start(phaseName, hostName string, paramList [][]any, logger logx.Logger) (b
 		// do nothing from now : only log
 		logger.Debugf("(%s) %s:%s > ongoing", phaseName, hostName, item.Name)
 		// send error if any into the chanel
-		errChItem <- fmt.Errorf("%w", nil)
+		// errChItem <- fmt.Errorf("%w", nil)
 		// logger.Infof("(%s) %s%s > finished", phaseName, hostName, item.Name)
 	} // loop
 
@@ -75,7 +75,7 @@ func Enable(phaseName, hostName string, paramList [][]any, logger logx.Logger) (
 		// do nothing from now : only log
 		logger.Debugf("(%s) %s:%s > ongoing", phaseName, hostName, item.Name)
 		// send error if any into the chanel
-		errChItem <- fmt.Errorf("%w", nil)
+		// errChItem <- fmt.Errorf("%w", nil)
 		// logger.Infof("(%s) %s%s > finished", phaseName, hostName, item.Name)
 	} // loop
 

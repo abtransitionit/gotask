@@ -7,7 +7,6 @@ import (
 	"github.com/abtransitionit/gocore/logx"
 	"github.com/abtransitionit/gocore/mock/filex"
 	lonpm "github.com/abtransitionit/golinux/mock/onpm"
-	"gopkg.in/yaml.v3"
 )
 
 // Description: add native os packages to a Linux host
@@ -18,13 +17,7 @@ func AddPkg(phaseName, hostName string, paramList [][]any, logger logx.Logger) (
 	if len(paramList) < 1 || len(paramList[0]) == 0 {
 		return false, fmt.Errorf("%s > list of package not provided in paramList", hostName)
 	}
-	raw := paramList[0]
-
-	b, err := yaml.Marshal(raw)
-	if err != nil {
-		return false, err
-	}
-	pkgList, err := filex.GetVarStructFromYamlString[lonpm.PkgSlice](fmt.Sprint(string(b)))
+	pkgList, err := filex.GetVarStructFromYaml[lonpm.PkgSlice](paramList[0])
 	if err != nil {
 		logger.Errorf("%v", err)
 	}
