@@ -31,10 +31,14 @@ func AddKModule(phaseName, hostName string, paramList [][]any, logger logx.Logge
 
 	// 3 - loop over item
 	for _, item := range moduleSlice {
-		// do nothing from now : only log
-		logger.Debugf("(%s) %s:%s > ongoing", phaseName, hostName, item.Name)
-		// send error if any into the chanel
-		errChItem <- fmt.Errorf("%w", nil)
+		// create an instance/object from data we have
+		kModule := oskernel.Module{Name: item.Name}
+		// operate on this object
+		_, err := kModule.Add(logger)
+		if err != nil {
+			// send error if any into the chanel
+			errChItem <- fmt.Errorf("adding kernel module %s: %w", item.Name, err)
+		}
 		// logger.Infof("(%s) %s%s > finished", phaseName, hostName, item.Name)
 	} // loop
 
@@ -82,10 +86,14 @@ func AddKParam(phaseName, hostName string, paramList [][]any, logger logx.Logger
 
 	// 3 - loop over item
 	for _, item := range parameterSlice {
-		// do nothing from now : only log
-		logger.Debugf("(%s) %s:%s > ongoing", phaseName, hostName, item.Name)
-		// send error if any into the chanel
-		errChItem <- fmt.Errorf("%w", nil)
+		// create an instance/object from data we have
+		kParameter := oskernel.Parameter{Name: item.Name}
+		// operate on this object
+		_, err := kParameter.Add(logger)
+		if err != nil {
+			// send error if any into the chanel
+			errChItem <- fmt.Errorf("adding kernel parameter %s: %w", item.Name, err)
+		}
 		// logger.Infof("(%s) %s%s > finished", phaseName, hostName, item.Name)
 	} // loop
 

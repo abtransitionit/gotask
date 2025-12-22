@@ -1,6 +1,6 @@
 # Terminology
 
-|name|type|extension|comment|
+|name|type|extension/definition|comment|
 |-|-|-|-|
 |osk|acro|**OS** **K**ernel|
 |oskm|acro|**OS** **K**ernel **m**odule|
