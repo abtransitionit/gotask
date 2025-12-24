@@ -37,7 +37,7 @@ func configureSelinuxOnSingleVm(ctx context.Context, logger logx.Logger, vmName 
 		return "", nil
 	}
 
-	// here: osFamily == "rhel" || "fedora"
+	// here: osFamily is in ["rhel", "fedora"]
 	logger.Debugf("%s:%s    🅐 Selinux status before is : %s / %s", vmName, osFamily, selinuxStatus, selinuxMode)
 	// logger.Debugf("%s:%s 🅐 configuring Selinux at startup and runtime", vmName, osFamily)
 	cli := selinux.ConfigureSelinuxAtRuntime()

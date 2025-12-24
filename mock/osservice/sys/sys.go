@@ -26,11 +26,13 @@ func Start(phaseName, hostName string, paramList [][]any, logger logx.Logger) (b
 
 	// 3 - loop over item
 	for _, item := range serviceSlice {
-		// do nothing from now : only log
-		logger.Debugf("(%s) %s:%s > ongoing", phaseName, hostName, item.Name)
-		// send error if any into the chanel
-		// errChItem <- fmt.Errorf("%w", nil)
-		// logger.Infof("(%s) %s%s > finished", phaseName, hostName, item.Name)
+		// get instance
+		osService := osservice.GetService(item.Name)
+		// operate
+		if _, err := osService.Start(logger); err != nil {
+			// send error if any into the chanel
+			errChItem <- fmt.Errorf("enabling os service %s: %w", item.Name, err)
+		}
 	} // loop
 
 	// 4 - manage error
@@ -49,8 +51,6 @@ func Start(phaseName, hostName string, paramList [][]any, logger logx.Logger) (b
 		return false, errCombined
 	}
 
-	// log
-	logger.Infof("Start called with param: %v", serviceSlice)
 	// handle success
 	return true, nil
 }
@@ -72,11 +72,13 @@ func Enable(phaseName, hostName string, paramList [][]any, logger logx.Logger) (
 
 	// 3 - loop over item
 	for _, item := range serviceSlice {
-		// do nothing from now : only log
-		logger.Debugf("(%s) %s:%s > ongoing", phaseName, hostName, item.Name)
-		// send error if any into the chanel
-		// errChItem <- fmt.Errorf("%w", nil)
-		// logger.Infof("(%s) %s%s > finished", phaseName, hostName, item.Name)
+		// get instance
+		osService := osservice.GetService(item.Name)
+		// operate
+		if _, err := osService.Enable(logger); err != nil {
+			// send error if any into the chanel
+			errChItem <- fmt.Errorf("enabling os service %s: %w", item.Name, err)
+		}
 	} // loop
 
 	// 4 - manage error
@@ -95,8 +97,6 @@ func Enable(phaseName, hostName string, paramList [][]any, logger logx.Logger) (
 		return false, errCombined
 	}
 
-	// log
-	logger.Infof("Enable called with param: %v", serviceSlice)
 	// handle success
 	return true, nil
 }

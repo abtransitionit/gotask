@@ -11,9 +11,9 @@ import (
 
 func AddKModule(phaseName, hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
 	// 1 - get parameters
-	// 11 - list of module
+	// 11 - list of KModule
 	if len(paramList) < 1 || len(paramList[0]) == 0 {
-		return false, fmt.Errorf("%s > moduleList not provided in paramList", hostName)
+		return false, fmt.Errorf("%s > Module list not provided in paramList", hostName)
 	}
 	moduleSlice, err := filex.GetVarStructFromYaml[oskernel.ModuleSlice](paramList[0])
 	if err != nil {
@@ -31,15 +31,13 @@ func AddKModule(phaseName, hostName string, paramList [][]any, logger logx.Logge
 
 	// 3 - loop over item
 	for _, item := range moduleSlice {
-		// create an instance/object from data we have
-		kModule := oskernel.Module{Name: item.Name}
-		// operate on this object
-		_, err := kModule.Add(logger)
-		if err != nil {
+		// get instance
+		kModule := oskernel.GetModule(item.Name, kernelFileName)
+		// operate
+		if _, err := kModule.Add(hostName, logger); err != nil {
 			// send error if any into the chanel
 			errChItem <- fmt.Errorf("adding kernel module %s: %w", item.Name, err)
 		}
-		// logger.Infof("(%s) %s%s > finished", phaseName, hostName, item.Name)
 	} // loop
 
 	// 4 - manage error
@@ -59,16 +57,16 @@ func AddKModule(phaseName, hostName string, paramList [][]any, logger logx.Logge
 	}
 
 	// log
-	logger.Infof("AddKModule called with param: %v and %s", moduleSlice, kernelFileName)
+	// logger.Infof("AddKModule called with param: %v and %s", moduleSlice, kernelFileName)
 	// handle success
 	return true, nil
 }
 
 func AddKParam(phaseName, hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
 	// 1 - get parameters
-	// 11 - list of module
+	// 11 - list of kParameter
 	if len(paramList) < 1 || len(paramList[0]) == 0 {
-		return false, fmt.Errorf("%s > moduleList not provided in paramList", hostName)
+		return false, fmt.Errorf("%s > Parameter list not provided in paramList", hostName)
 	}
 	parameterSlice, err := filex.GetVarStructFromYaml[oskernel.ParameterSlice](paramList[0])
 	if err != nil {
@@ -86,15 +84,13 @@ func AddKParam(phaseName, hostName string, paramList [][]any, logger logx.Logger
 
 	// 3 - loop over item
 	for _, item := range parameterSlice {
-		// create an instance/object from data we have
-		kParameter := oskernel.Parameter{Name: item.Name}
-		// operate on this object
-		_, err := kParameter.Add(logger)
-		if err != nil {
+		// get instance
+		kParameter := oskernel.GetParameter(item.Name, item.Value, kernelFileName)
+		// operate
+		if _, err := kParameter.Add(hostName, logger); err != nil {
 			// send error if any into the chanel
 			errChItem <- fmt.Errorf("adding kernel parameter %s: %w", item.Name, err)
 		}
-		// logger.Infof("(%s) %s%s > finished", phaseName, hostName, item.Name)
 	} // loop
 
 	// 4 - manage error
@@ -114,7 +110,7 @@ func AddKParam(phaseName, hostName string, paramList [][]any, logger logx.Logger
 	}
 
 	// log
-	logger.Infof("AddKParam called with param: %v and %s", parameterSlice, kernelFileName)
+	// logger.Infof("AddKParam called with param: %v and %s", parameterSlice, kernelFileName)
 	// handle success
 	return true, nil
 }

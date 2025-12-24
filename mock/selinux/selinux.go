@@ -1,22 +1,22 @@
 package selinux
 
 import (
+	"fmt"
+
 	"github.com/abtransitionit/gocore/logx"
-	"github.com/abtransitionit/golinux/selinux"
+	"github.com/abtransitionit/golinux/mock/selinux"
 )
 
-func ConfigureSelinux(phaseName, hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
+func Configure(phaseName, hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
 
-	// play CLI
-	_, err := selinux.ConfigureSelinux(hostName, logger)
+	// get Instance
+	selinux := selinux.GetSelinux()
 
-	// handle system error
-	if err != nil {
-		logger.Warnf("host: %s > system error > upgrading OS: %v", hostName, err)
+	// operate
+	if _, err := selinux.Configure(hostName, logger); err != nil {
+		// handle error
+		return false, fmt.Errorf("%s > configuring selinux > %v", hostName, err)
 	}
-
-	// log
-	// logger.Infof("ConfigureSelinux called ")
 
 	// handle success
 	return true, nil
