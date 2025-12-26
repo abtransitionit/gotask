@@ -15,21 +15,21 @@ func Start(phaseName, hostName string, paramList [][]any, logger logx.Logger) (b
 	if len(paramList) < 1 || len(paramList[0]) == 0 {
 		return false, fmt.Errorf("%s > serviceList not provided in paramList", hostName)
 	}
-	serviceSlice, err := filex.GetVarStructFromYaml[osservice.ServiceSlice](paramList[0])
+	slice, err := filex.GetVarStructFromYaml[osservice.ServiceSlice](paramList[0])
 	if err != nil {
 		logger.Errorf("%v", err)
 	}
 
 	// 2 - manage error reporting
-	nbItem := len(serviceSlice)
+	nbItem := len(slice)
 	errChItem := make(chan error, nbItem) // define a channel to collect errors
 
 	// 3 - loop over item
-	for _, item := range serviceSlice {
+	for _, item := range slice {
 		// get instance
-		osService := osservice.GetService(item.Name)
+		i := osservice.GetService(item.Name)
 		// operate
-		if _, err := osService.Start(hostName, logger); err != nil {
+		if _, err := i.Start(hostName, logger); err != nil {
 			// send error if any into the chanel
 			errChItem <- fmt.Errorf("enabling os service %s: %w", item.Name, err)
 		}
@@ -61,17 +61,17 @@ func Enable(phaseName, hostName string, paramList [][]any, logger logx.Logger) (
 	if len(paramList) < 1 || len(paramList[0]) == 0 {
 		return false, fmt.Errorf("%s > serviceList not provided in paramList", hostName)
 	}
-	serviceSlice, err := filex.GetVarStructFromYaml[osservice.ServiceSlice](paramList[0])
+	slice, err := filex.GetVarStructFromYaml[osservice.ServiceSlice](paramList[0])
 	if err != nil {
 		logger.Errorf("%v", err)
 	}
 
 	// 2 - manage error reporting
-	nbItem := len(serviceSlice)
+	nbItem := len(slice)
 	errChItem := make(chan error, nbItem) // define a channel to collect errors
 
 	// 3 - loop over item
-	for _, item := range serviceSlice {
+	for _, item := range slice {
 		// get instance
 		osService := osservice.GetService(item.Name)
 		// operate
@@ -107,17 +107,17 @@ func Install(phaseName, hostName string, paramList [][]any, logger logx.Logger) 
 	if len(paramList) < 1 || len(paramList[0]) == 0 {
 		return false, fmt.Errorf("%s > serviceList not provided in paramList", hostName)
 	}
-	serviceSlice, err := filex.GetVarStructFromYaml[osservice.ServiceSlice](paramList[0])
+	slice, err := filex.GetVarStructFromYaml[osservice.ServiceSlice](paramList[0])
 	if err != nil {
 		logger.Errorf("%v", err)
 	}
 
 	// 2 - manage error reporting
-	nbItem := len(serviceSlice)
+	nbItem := len(slice)
 	errChItem := make(chan error, nbItem) // define a channel to collect errors
 
 	// 3 - loop over item
-	for _, item := range serviceSlice {
+	for _, item := range slice {
 		// get instance
 		osService := osservice.GetService(item.Name)
 		// operate

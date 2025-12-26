@@ -12,11 +12,14 @@ func ResetNode(phaseName, hostName string, paramList [][]any, logger logx.Logger
 	// get Instance
 	node := k8s.GetNode(hostName)
 
-	// operate
-	if _, err := node.Reset(logger); err != nil {
-		// handle error
-		return false, fmt.Errorf("%s > configuring selinux > %v", hostName, err)
+	// 1 - operate
+	// 11 - get cli
+	cli, err := node.Reset(logger)
+	if err != nil {
+		return false, fmt.Errorf("%s > Resetting Node > %v", hostName, err)
 	}
+	// 12 - play cli
+	logger.Infof("%s > Resetting Node with cli: %s ", hostName, cli)
 
 	// handle success
 	return true, nil

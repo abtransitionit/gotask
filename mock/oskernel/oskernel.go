@@ -9,13 +9,14 @@ import (
 	"github.com/abtransitionit/golinux/mock/oskernel"
 )
 
-func AddKModule(phaseName, hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
+// description: Load a list of kernel modules
+func LoadModule(phaseName, hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
 	// 1 - get parameters
 	// 11 - list of KModule
 	if len(paramList) < 1 || len(paramList[0]) == 0 {
 		return false, fmt.Errorf("%s > Module list not provided in paramList", hostName)
 	}
-	moduleSlice, err := filex.GetVarStructFromYaml[oskernel.ModuleSlice](paramList[0])
+	slice, err := filex.GetVarStructFromYaml[oskernel.ModuleSlice](paramList[0])
 	if err != nil {
 		logger.Errorf("%v", err)
 	}
@@ -26,29 +27,27 @@ func AddKModule(phaseName, hostName string, paramList [][]any, logger logx.Logge
 	kernelFileName := fmt.Sprint(paramList[1][0])
 
 	// 2 - manage error reporting
-	nbItem := len(moduleSlice)
+	nbItem := len(slice)
 	errChItem := make(chan error, nbItem) // define a channel to collect errors
 
-	// 3 - loop over item
-	for _, item := range moduleSlice {
-		// get instance
-		kModule := oskernel.GetModule(item.Name, kernelFileName)
-		// operate
-		if _, err := kModule.Add(hostName, logger); err != nil {
-			// send error if any into the chanel
-			errChItem <- fmt.Errorf("adding kernel module %s: %w", item.Name, err)
-		}
-	} // loop
+	// 3 - create an instance from data
+	i := oskernel.GetModuleSet(slice, kernelFileName)
 
-	// 4 - manage error
+	// 4 - operate
+	if _, err := i.Load(hostName, logger); err != nil {
+		// send error if any into the chanel
+		errChItem <- fmt.Errorf("adding kernel module %s: %w", slice[0].Name, err)
+	}
+
+	// 5 - manage error
 	close(errChItem) // close the channel - signal that no more error will be sent
-	// 41 - collect errors
+	// 51 - collect errors
 	var errList []error
 	for e := range errChItem {
 		errList = append(errList, e)
 	}
 
-	// 42 - handle errors
+	// 52 - handle errors
 	nbGroutineFailed := len(errList)
 	errCombined := errors.Join(errList...)
 	if nbGroutineFailed > 0 {
@@ -56,19 +55,18 @@ func AddKModule(phaseName, hostName string, paramList [][]any, logger logx.Logge
 		return false, errCombined
 	}
 
-	// log
-	// logger.Infof("AddKModule called with param: %v and %s", moduleSlice, kernelFileName)
 	// handle success
 	return true, nil
 }
 
-func AddKParam(phaseName, hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
+// description: Load a list of kernel module parameters
+func LoadParam(phaseName, hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
 	// 1 - get parameters
 	// 11 - list of kParameter
 	if len(paramList) < 1 || len(paramList[0]) == 0 {
 		return false, fmt.Errorf("%s > Parameter list not provided in paramList", hostName)
 	}
-	parameterSlice, err := filex.GetVarStructFromYaml[oskernel.ParameterSlice](paramList[0])
+	slice, err := filex.GetVarStructFromYaml[oskernel.ParameterSlice](paramList[0])
 	if err != nil {
 		logger.Errorf("%v", err)
 	}
@@ -79,29 +77,27 @@ func AddKParam(phaseName, hostName string, paramList [][]any, logger logx.Logger
 	kernelFileName := fmt.Sprint(paramList[1][0])
 
 	// 2 - manage error reporting
-	nbItem := len(parameterSlice)
+	nbItem := len(slice)
 	errChItem := make(chan error, nbItem) // define a channel to collect errors
 
-	// 3 - loop over item
-	for _, item := range parameterSlice {
-		// get instance
-		kParameter := oskernel.GetParameter(item.Name, item.Value, kernelFileName)
-		// operate
-		if _, err := kParameter.Add(hostName, logger); err != nil {
-			// send error if any into the chanel
-			errChItem <- fmt.Errorf("adding kernel parameter %s: %w", item.Name, err)
-		}
-	} // loop
+	// 3 - create an instance from data we have
+	i := oskernel.GetParameterSet(slice, kernelFileName)
 
-	// 4 - manage error
+	// 4 - operate
+	if _, err := i.Load(hostName, logger); err != nil {
+		// send error if any into the chanel
+		errChItem <- fmt.Errorf("adding kernel parameter: %w", err)
+	}
+
+	// 5 - manage error
 	close(errChItem) // close the channel - signal that no more error will be sent
-	// 41 - collect errors
+	// 51 - collect errors
 	var errList []error
 	for e := range errChItem {
 		errList = append(errList, e)
 	}
 
-	// 42 - handle errors
+	// 52 - handle errors
 	nbGroutineFailed := len(errList)
 	errCombined := errors.Join(errList...)
 	if nbGroutineFailed > 0 {
@@ -109,8 +105,6 @@ func AddKParam(phaseName, hostName string, paramList [][]any, logger logx.Logger
 		return false, errCombined
 	}
 
-	// log
-	// logger.Infof("AddKParam called with param: %v and %s", parameterSlice, kernelFileName)
 	// handle success
 	return true, nil
 }

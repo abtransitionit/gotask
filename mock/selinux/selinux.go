@@ -10,11 +10,10 @@ import (
 func Configure(phaseName, hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
 
 	// get Instance
-	selinux := selinux.GetSelinux()
+	i := selinux.GetSelinux()
 
 	// operate
-	if _, err := selinux.Configure(hostName, logger); err != nil {
-		// handle error
+	if _, err := i.Configure(hostName, logger); err != nil {
 		return false, fmt.Errorf("%s > configuring selinux > %v", hostName, err)
 	}
 
