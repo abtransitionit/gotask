@@ -101,7 +101,7 @@ func CreateRcFile(phaseName, hostName string, paramList [][]any, logger logx.Log
 				wgHost.Done() // Decrement the WaitGroup counter - when the goroutine complete
 			}()
 			logger.Infof("↪ (%s) %s/%s > ongoing", phaseName, hostName, oneItem)
-			grErr := AddRcFile(hostName, node, fileName, logger) // the code to be executed by the goroutine
+			grErr := lfile.ForceCreateRcFile(hostName, node, fileName, logger) // the code to be executed by the goroutine
 			if grErr != nil {
 				logger.Errorf("(%s) %s/%s > %v", phaseName, hostName, oneItem, grErr) // send goroutines error if any into the chanel
 				// send goroutines error if any into the chanel
