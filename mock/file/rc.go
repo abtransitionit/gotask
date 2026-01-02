@@ -23,7 +23,7 @@ func AddRcFile(hostName, nodeName, customRcFileName string, logger logx.Logger) 
 		return fmt.Errorf("creating rc file %s > %w", i.FullPath, err)
 	}
 	// log
-	logger.Infof("%s:%s > created rc file : %s", hostName, nodeName, i.FullPath)
+	// logger.Debugf("%s:%s > createdOO2 rc file : %s", hostName, nodeName, i.FullPath)
 
 	// 2 - source this file in the Std RC File
 	// 21 - get instance
@@ -38,7 +38,7 @@ func AddRcFile(hostName, nodeName, customRcFileName string, logger logx.Logger) 
 
 func RcAddPath(phaseName, hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
 	// log
-	logger.Infof("%s:%s > add envar $PATH to custom rc file ", hostName)
+	logger.Infof("%s > add envar $PATH to custom rc file ", hostName)
 	// handle success
 	return true, nil
 }
