@@ -36,7 +36,7 @@ func LoadModule(phaseName, hostName string, paramList [][]any, logger logx.Logge
 	i := oskernel.GetModuleSet(slice, kernelFileName)
 
 	// 4 - operate
-	if _, err := i.Load(hostName, logger); err != nil {
+	if err := i.Load(hostName, logger); err != nil {
 		// send error if any into the chanel
 		errChItem <- fmt.Errorf("adding kernel module %s: %w", slice[0].Name, err)
 	}
