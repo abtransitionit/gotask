@@ -173,16 +173,9 @@ func WaitIsSshOnline(phaseName, hostName string, paramList [][]any, logger logx.
 
 // Description: reboots a set of node if needed
 func RebootIfNeeded(phaseName, hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
-
 	// play CLI
-	_, err := lnode.RebootIfNeeded(hostName, logger)
-
-	// handle system error
-	if err != nil {
+	if _, err := lnode.RebootIfNeeded(hostName, logger); err != nil {
 		logger.Warnf("host: %s > system error > getting reboot status: %v", hostName, err)
 	}
-
-	// handle success
-	// logger.Debugf("host: %s > need reboot: %s", hostName, out)
 	return true, nil
 }
