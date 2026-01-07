@@ -33,7 +33,7 @@ func AddPkgGo(phaseName, hostName string, paramList [][]any, logger logx.Logger)
 		// 32 - operate
 		if err := i.Install(hostName, folderPath, logger); err != nil {
 			// send error if any into the chanel
-			errChItem <- fmt.Errorf("installing FO cli %s: %w", item.Name, err)
+			errChItem <- fmt.Errorf("installing GO cli %s: %w", item.Name, err)
 		}
 	} // loop
 

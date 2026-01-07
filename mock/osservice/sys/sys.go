@@ -31,7 +31,7 @@ func Start(phaseName, hostName string, paramList [][]any, logger logx.Logger) (b
 		// 32 - operate
 		if err := i.Start(hostName, logger); err != nil {
 			// send error if any into the chanel
-			errChItem <- fmt.Errorf("enabling os service %s: %w", item.Name, err)
+			errChItem <- fmt.Errorf("starting os service %s: %w", item.Name, err)
 		}
 	} // loop
 
@@ -48,6 +48,51 @@ func Start(phaseName, hostName string, paramList [][]any, logger logx.Logger) (b
 	errCombined := errors.Join(errList...)
 	if nbGroutineFailed > 0 {
 		logger.Errorf("❌ %s > nb service starting that failed: %d", hostName, nbGroutineFailed)
+		return false, errCombined
+	}
+
+	// handle success
+	return true, nil
+}
+func Stop(phaseName, hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
+	// 1 - get parameters
+	// check
+	if len(paramList) < 1 || len(paramList[0]) == 0 {
+		return false, fmt.Errorf("%s > serviceList not provided in paramList", hostName)
+	}
+	// 11 - list of service
+	slice, err := filex.GetVarStructFromYaml[osservice.ServiceSlice](paramList[0])
+	if err != nil {
+		logger.Errorf("%v", err)
+	}
+	// 2 - manage error reporting
+	nbItem := len(slice)
+	errChItem := make(chan error, nbItem) // define a channel to collect errors
+
+	// 3 - loop over item
+	for _, item := range slice {
+		// 31 - get instance
+		i := osservice.GetService(item.Name)
+		// 32 - operate
+		if err := i.Stop(hostName, logger); err != nil {
+			// send error if any into the chanel
+			errChItem <- fmt.Errorf("stoping os service %s: %w", item.Name, err)
+		}
+	} // loop
+
+	// 4 - manage error
+	close(errChItem) // close the channel - signal that no more error will be sent
+	// 41 - collect errors
+	var errList []error
+	for e := range errChItem {
+		errList = append(errList, e)
+	}
+
+	// 42 - handle errors
+	nbGroutineFailed := len(errList)
+	errCombined := errors.Join(errList...)
+	if nbGroutineFailed > 0 {
+		logger.Errorf("❌ %s > nb service stoping that failed: %d", hostName, nbGroutineFailed)
 		return false, errCombined
 	}
 

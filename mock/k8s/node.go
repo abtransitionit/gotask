@@ -13,7 +13,7 @@ func ResetNode(phaseName, hostName string, paramList [][]any, logger logx.Logger
 	i := k8s.GetNode(hostName)
 
 	// 2 - operate
-	if err := i.Reset(logger); err != nil {
+	if _, err := i.Reset(logger); err != nil {
 		return false, fmt.Errorf("%s > Resetting Node > %v", hostName, err)
 	}
 
@@ -56,13 +56,20 @@ func InitCplane(phaseName, hostName string, paramList [][]any, logger logx.Logge
 }
 
 func AddWorker(phaseName, hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
+	// 1 - get parameters
+	// 11 - check
+	if len(paramList) < 1 || len(paramList[0]) == 0 {
+		return false, fmt.Errorf("%s > control plane not provided in paramList", hostName)
+	}
+	// 12 - get control plane name
+	controlPlaneName := fmt.Sprint(paramList[0][0])
+
 	// 1 - get Instance
 	i := k8s.GetWorker(hostName)
 
 	// 2 - operate
-	if err := i.Add(logger); err != nil {
-		// handle error
-		return false, fmt.Errorf("%s > configuring selinux > %v", hostName, err)
+	if err := i.Add(controlPlaneName, logger); err != nil {
+		return false, fmt.Errorf("%s:%s > adding worker > %w", hostName, i.Name, err)
 	}
 	// handle success
 	return true, nil

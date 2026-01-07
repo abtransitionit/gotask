@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/abtransitionit/gocore/logx"
-	"github.com/abtransitionit/golinux/mock/k8s/cli"
+	"github.com/abtransitionit/golinux/mock/k8s"
 )
 
 func ConfigureKubectl(phaseName, hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
@@ -19,11 +19,11 @@ func ConfigureKubectl(phaseName, hostName string, paramList [][]any, logger logx
 	installNode := fmt.Sprint(paramList[1][0])
 
 	// 2 - get Instance
-	i := cli.GetKubectl(cplaneNode, installNode)
+	i := k8s.GetKubectl(cplaneNode, installNode)
 
 	// // 3 - operate
 	if err := i.Configure(hostName, logger); err != nil {
-		return false, fmt.Errorf("%s > configuring kubectl > %w", hostName, err)
+		return false, fmt.Errorf("%s:%s > configuring kubectl > %w", hostName, i.InstallNodeName, err)
 	}
 
 	// handle success
