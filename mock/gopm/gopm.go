@@ -22,6 +22,7 @@ func AddPkgGo(phaseName, hostName string, paramList [][]any, logger logx.Logger)
 	}
 	// 12 - binary folder
 	folderPath := fmt.Sprint(paramList[1][0])
+
 	// 2 - manage error reporting
 	nbItem := len(slice)
 	errChItem := make(chan error, nbItem) // define a channel to collect errors

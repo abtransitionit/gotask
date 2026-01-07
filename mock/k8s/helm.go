@@ -1,20 +1,67 @@
 package k8s
 
 import (
+	"errors"
+	"fmt"
+
 	"github.com/abtransitionit/gocore/logx"
+	"github.com/abtransitionit/gocore/mock/filex"
+	"github.com/abtransitionit/golinux/mock/k8scli/helm"
 )
 
 // Description: Add helm repo to a Helm client
 //
 // Notes:
 //
-// - it just adds the repo to the Helm client, it does not install any chart
+// - it just adds the repo to the Helm client cfg files, it does not install any chart
 func AddRepoHelm(phaseName, hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
 	// 1 - get parameters
-	// 11 - List helm repo
+	// 10 - check
+	if len(paramList) < 1 || len(paramList[0]) == 0 || len(paramList[1]) == 0 {
+		return false, fmt.Errorf("%s:helm > list repos or helm client not properly provided in paramList", hostName)
+	}
+	// 11 - name of helm client node
+	helmClientNodeName := fmt.Sprint(paramList[1][0])
+
+	// 12 - List of helm repos
+	slice, err := filex.GetVarStructFromYaml[helm.RepoSlice](paramList[0])
+	if err != nil {
+		return false, fmt.Errorf("%s:helm > getting list from paramList: %w", hostName, err)
+	}
+
+	// 2 - manage error reporting
+	nbItem := len(slice)
+	errChItem := make(chan error, nbItem) // define a channel to collect errors
+
+	// 3 - loop over item
+	for _, item := range slice {
+		// 31 - get instance
+		i := helm.GetRepo(item)
+		// 32 - operate
+		if err := i.Add(hostName, helmClientNodeName, logger); err != nil {
+			// send error if any into the chanel
+			errChItem <- fmt.Errorf("installing Helm repo %s: %w", item.Name, err)
+		}
+	} // loop
+
+	// 4 - manage error
+	close(errChItem) // close the channel - signal that no more error will be sent
+	// 41 - collect errors
+	var errList []error
+	for e := range errChItem {
+		errList = append(errList, e)
+	}
+
+	// 42 - handle errors
+	nbGroutineFailed := len(errList)
+	errCombined := errors.Join(errList...)
+	if nbGroutineFailed > 0 {
+		logger.Errorf("❌ %s > nb item that failed: %d", hostName, nbGroutineFailed)
+		return false, errCombined
+	}
 
 	// handle success
-	logger.Infof("%s > added repo: TODO", hostName)
+	// logger.Infof("%s:%s > added repo %v on helm client", hostName, helmClientNodeName, slice)
 	return true, nil
 }
 
