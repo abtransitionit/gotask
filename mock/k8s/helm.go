@@ -10,12 +10,11 @@ import (
 //
 // - it just adds the repo to the Helm client, it does not install any chart
 func AddRepoHelm(phaseName, hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
-	// log
-	logger.Info("AddRepoHelm : adding repo: TODO")
 	// 1 - get parameters
 	// 11 - List helm repo
 
 	// handle success
+	logger.Infof("%s > added repo: TODO", hostName)
 	return true, nil
 }
 
