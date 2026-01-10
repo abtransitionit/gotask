@@ -71,21 +71,21 @@ func AddRepoHelm(phaseName, hostName string, paramList [][]any, logger logx.Logg
 //
 // - the helm repo of the chart must be presents in the Helm client
 func AddChartHelm(phaseName, hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
-	// log
 	logger.Info("AddChartHelm : adding chart: TODO")
-	// 1 - get parameters
-	// 11 - List helm chart
-
-	// handle success
 	return true, nil
 }
 
-// Description: Add helm releases into a K8s cluster from a Helm client
+// Description: Add a helm release from a Helm Chart into a K8s cluster's namespaces
 //
 // Notes:
 //
 // - the helm repo of the chart must be presents in the Helm client
-func AddReleaseHelm(phaseName, hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
+func InstallReleaseHelm(phaseName, hostName string, paramList [][]any, logger logx.Logger) (bool, error) {
+	// 1 - get parameters
+	// 10 - check
+	if len(paramList) < 1 || len(paramList[0]) == 0 || len(paramList[1]) == 0 {
+		return false, fmt.Errorf("%s:helm > list repos or helm client not properly provided in paramList", hostName)
+	}
 	// log
 	logger.Info("AddReleaseHelm : adding release: TODO")
 	// 1 - get parameters
