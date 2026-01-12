@@ -20,7 +20,7 @@ func AddRepoHelm(phaseName, hostName string, paramList [][]any, logger logx.Logg
 	if len(paramList) < 1 || len(paramList[0]) == 0 || len(paramList[1]) == 0 {
 		return false, fmt.Errorf("%s:helm > list repos or helm client not properly provided in paramList", hostName)
 	}
-	// 11 - name of helm client node
+	// 11 - name of helm client host
 	helmClientNodeName := fmt.Sprint(paramList[1][0])
 
 	// 12 - List of helm repos
@@ -101,7 +101,7 @@ func InstallReleaseHelm(phaseName, hostName string, paramList [][]any, logger lo
 	if len(paramList) < 1 || len(paramList[0]) == 0 || len(paramList[1]) == 0 {
 		return false, fmt.Errorf("%s:helm > list releases or helm client not properly provided in paramList", hostName)
 	}
-	// 11 - name of helm client node
+	// 11 - name of helm client host
 	helmClientNodeName := fmt.Sprint(paramList[1][0])
 
 	// 12 - List of helm release
@@ -117,7 +117,8 @@ func InstallReleaseHelm(phaseName, hostName string, paramList [][]any, logger lo
 	// 3 - loop over item
 	for _, item := range slice {
 		// 31 - get instance
-		i := helm.GetRelease(item.Name, item.CQName, item.Version, item.Namespace)
+		logger.Debugf("item.Param >  %v", item.Param)
+		i := helm.GetRelease(item.Name, item.CQName, item.Version, item.Namespace, item.Param)
 		// 32 - operate
 		if err := i.Install(hostName, helmClientNodeName, logger); err != nil {
 			// send error if any into the chanel
