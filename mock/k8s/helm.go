@@ -118,7 +118,7 @@ func InstallReleaseHelm(phaseName, hostName string, paramList [][]any, logger lo
 	for _, item := range slice {
 		// 31 - get instance
 		logger.Debugf("item.Param >  %v", item.Param)
-		i := helm.GetRelease(item.Name, item.CQName, item.Version, item.Namespace, item.Param)
+		i := helm.GetRelease(item.Name, item.Chart.QName, item.Chart.Version, item.Namespace, item.Param)
 		// 32 - operate
 		if err := i.Install(hostName, helmClientNodeName, logger); err != nil {
 			// send error if any into the chanel
