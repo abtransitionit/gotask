@@ -35,10 +35,11 @@ func AddRepoHelm(phaseName, hostName string, paramList [][]any, logger logx.Logg
 
 	// 3 - loop over item
 	for _, item := range slice {
-		// 31 - get instance
-		i := helm.GetRepo(item.Name, "")
-		// 32 - operate
-		if err := i.Add(hostName, helmClientNodeName, logger); err != nil {
+		// 31 - get instance and operate
+		// i := helm.GetRepo(item.Name, "")
+		// if err := i.Add(hostName, helmClientNodeName, logger); err != nil {
+		i := helm.Resource{Type: helm.ResRepo, Name: item.Name}
+		if _, err := i.Add("local", helmClientNodeName, logger); err != nil {
 			// send error if any into the chanel
 			errChItem <- fmt.Errorf("adding Helm repo %s: %w", item.Name, err)
 		}
