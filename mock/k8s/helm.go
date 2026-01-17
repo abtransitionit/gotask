@@ -117,14 +117,21 @@ func InstallReleaseHelm(phaseName, hostName string, paramList [][]any, logger lo
 
 	// 3 - loop over item
 	for _, item := range slice {
-		// 31 - get instance
-		logger.Debugf("item.Param >  %v", item.Param)
-		i := helm.GetRelease(item.Name, item.Chart.QName, item.Chart.Version, item.Namespace, item.Param)
-		// 32 - operate
-		if err := i.Install(hostName, helmClientNodeName, logger); err != nil {
-			// send error if any into the chanel
-			errChItem <- fmt.Errorf("installing Helm release %s: %w", item.Name, err)
+		// 31 - get instance and operate
+		// logger.Debugf("item.Param >  %v", item.Param)
+		i := helm.Resource{Type: helm.ResRelease, Name: item.Name, Namespace: item.Namespace, QName: item.Chart.QName, Version: item.Chart.Version, Param: item.Param}
+		if err := i.Install("local", helmClientNodeName, logger); err != nil {
+			errChItem <- fmt.Errorf("local:%s:%s installing Helm release > %w", helmClientNodeName, item.Name, err)
+
 		}
+		// i := helm.GetRelease(item.Name, item.Chart.QName, item.Chart.Version, item.Namespace, item.Param)
+		// if err := i.Install(hostName, helmClientNodeName, logger); err != nil {
+		// 	errChItem <- fmt.Errorf("installing Helm release %s: %w", item.Name, err)
+		// }
+		// i := helm.GetRelease(item.Name, item.Chart.QName, item.Chart.Version, item.Namespace, item.Param)
+		// if err := i.Install(hostName, helmClientNodeName, logger); err != nil {
+		// 	errChItem <- fmt.Errorf("installing Helm release %s: %w", item.Name, err)
+		// }
 	} // loop
 
 	// 4 - manage error
