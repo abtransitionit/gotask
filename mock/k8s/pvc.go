@@ -9,11 +9,11 @@ import (
 	"github.com/abtransitionit/golinux/mock/k8scli/kubectl"
 )
 
-func DeployPvc(phaseName, kubectlHost string, paramList [][]any, logger logx.Logger) (bool, error) {
+func DeployLpp(phaseName, kubectlHost string, paramList [][]any, logger logx.Logger) (bool, error) {
 	// 1 - get Instance and operate
-	i := kubectl.Resource{Type: kubectl.ResPvc}
-	if _, err := i.AddPvc("local", kubectlHost, logger); err != nil {
-		return false, fmt.Errorf("local:%s > adding PVC > %v", kubectlHost, err)
+	i := kubectl.Resource{Type: kubectl.ResManifest, Name: "rancher-lpp"}
+	if _, err := i.Apply("local", kubectlHost, logger); err != nil {
+		return false, fmt.Errorf("local:%s > deploying Rancher LPP > %v", kubectlHost, err)
 	}
 
 	// handle success
