@@ -124,14 +124,6 @@ func InstallReleaseHelm(phaseName, hostName string, paramList [][]any, logger lo
 			errChItem <- fmt.Errorf("%s:%s:%s installing Helm release > %w", hostName, helmClientNodeName, item.Name, err)
 
 		}
-		// i := helm.GetRelease(item.Name, item.Chart.QName, item.Chart.Version, item.Namespace, item.Param)
-		// if err := i.Install(hostName, helmClientNodeName, logger); err != nil {
-		// 	errChItem <- fmt.Errorf("installing Helm release %s: %w", item.Name, err)
-		// }
-		// i := helm.GetRelease(item.Name, item.Chart.QName, item.Chart.Version, item.Namespace, item.Param)
-		// if err := i.Install(hostName, helmClientNodeName, logger); err != nil {
-		// 	errChItem <- fmt.Errorf("installing Helm release %s: %w", item.Name, err)
-		// }
 	} // loop
 
 	// 4 - manage error
@@ -151,6 +143,5 @@ func InstallReleaseHelm(phaseName, hostName string, paramList [][]any, logger lo
 	}
 
 	// handle success
-	// logger.Infof("%s:%s > added repo %v on helm client", hostName, helmClientNodeName, slice)
 	return true, nil
 }
